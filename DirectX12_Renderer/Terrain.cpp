@@ -19,12 +19,14 @@ Terrain::Terrain(Graphics* renderer) :
 {
 	LoadHeightMap(renderer, L"resource/gebco_08_rev_elev_21600x10800.PNG", L"resource/land_shallow_topo_2048.tif");
 	
-	XMStoreFloat4x4(&m_worldTransform, XMMatrixTranslation(1.0f, 1.0f, 1.0f));
+	
 
 	InitPipelineTes(renderer);
 	InitPipelineTes_Wireframe(renderer);
 
-	CreateGeosphere(renderer, 500, 10);
+	CreateGeosphere(renderer, 2000, 10);
+
+	XMStoreFloat4x4(&m_worldTransform, XMMatrixTranslation(1.0f, 1.0f, 1.0f));
 }
 
 Terrain::~Terrain()

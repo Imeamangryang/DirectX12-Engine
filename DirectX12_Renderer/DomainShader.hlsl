@@ -121,6 +121,8 @@ DS_OUTPUT DS(
 
 	output.norm = float4(normal, 1.0f);
 
+	// MVP º¯È¯
+	output.pos = mul(world, output.pos);
 	output.pos = mul(output.pos, viewproj);
 
 	return output;

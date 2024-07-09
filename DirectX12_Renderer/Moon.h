@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Renderer.h"
+#include "OrbitCycle.h"
 #include "stdafx.h"
 #include "Structures.h"
 
@@ -40,7 +41,7 @@ private:
 	ComPtr<ID3D12RootSignature> m_rootSignatureTes;
 	ComPtr<ID3D12RootSignature> m_rootSignatureTes_Wireframe;
 	ID3D12Resource* m_CBV;
-	SkyConstantBuffer m_constantBufferData;
+	ConstantBuffer m_constantBufferData;
 	UINT8* m_cbvDataBegin;
 	UINT m_srvDescSize;
 
@@ -51,4 +52,6 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW	m_indexBufferView;
 	UINT m_indexcount;
+	OrbitCycle m_orbitCycle;
+	XMFLOAT4X4 m_worldTransform;
 };

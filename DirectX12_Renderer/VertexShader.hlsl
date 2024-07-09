@@ -25,13 +25,18 @@ cbuffer ConstantBuffer : register(b0)
 VS_OUTPUT VS(VS_INPUT input) {
 	VS_OUTPUT output;
 
-	output.pos = float4(input.pos.x, input.pos.y, input.pos.z, 1.0f);
-	output.pos = mul(output.pos, viewproj);
+	// 월드 변환 적용
+    float4 worldPos = mul(world, float4(input.pos, 1.0f));
+    // 뷰-프로젝션 변환 적용
+    output.pos = mul(worldPos, viewproj);
 
-	output.norm = float4(input.norm, 1.0f);
+	// 노멀 변환 (월드 행렬의 상위 3x3 부분만 사용)
+    float3 worldNormal = mul(input.norm, (float3x3) world);
+    output.norm = float4(worldNormal, 1.0f);
 
-	float theta = atan2(output.norm.x, output.norm.z);
-	float phi = acos(output.norm.y);
+    // 텍스처 좌표 계산
+    float theta = atan2(worldNormal.x, worldNormal.z);
+    float phi = acos(worldNormal.y);
 
 	output.tex.x = theta / (2.0f * 3.14f);
 	output.tex.y = phi / 3.14f;

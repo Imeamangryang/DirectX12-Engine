@@ -11,14 +11,18 @@ Moon::Moon(Graphics* renderer) :
 	m_vertexBuffer(nullptr),
 	m_vertexBufferUpload(nullptr),
 	m_indexBuffer(nullptr),
-	m_indexBufferUpload(nullptr)
+	m_indexBufferUpload(nullptr),
+	m_orbitCycle(5760),
+	m_worldTransform(MathHelper::Identity4x4())
 {
 	LoadHeightMap(renderer, L"resource/ldem_16.tif", L"resource/lroc_color_poles_4k.tif");
 
 	InitPipelineTes(renderer);
 	InitPipelineTes_Wireframe(renderer);
 
-	CreateGeosphere(renderer, 600, 10);
+	CreateGeosphere(renderer, 500, 10);
+
+	XMStoreFloat4x4(&m_worldTransform, XMMatrixTranslation(1.0f, 5000.0f, 1.0f));
 }
 
 Moon::~Moon()
@@ -67,11 +71,13 @@ void Moon::DrawTes(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 v
 	m_commandList->SetPipelineState(m_pipelineStateTes.Get());
 	m_commandList->SetGraphicsRootSignature(m_rootSignatureTes.Get());
 
+	m_constantBufferData.world = m_worldTransform;
 	m_constantBufferData.viewproj = viewproj;
 	m_constantBufferData.eye = eye;
 	m_constantBufferData.height = m_height;
 	m_constantBufferData.width = m_width;
-	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(SkyConstantBuffer));
+	m_constantBufferData.light = m_orbitCycle.GetLight();
+	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
 	m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
@@ -93,11 +99,13 @@ void Moon::DrawTes_Wireframe(ComPtr<ID3D12GraphicsCommandList> m_commandList, XM
 	m_commandList->SetPipelineState(m_pipelineStateTes_Wireframe.Get());
 	m_commandList->SetGraphicsRootSignature(m_rootSignatureTes.Get());
 
+	m_constantBufferData.world = m_worldTransform;
 	m_constantBufferData.viewproj = viewproj;
 	m_constantBufferData.eye = eye;
 	m_constantBufferData.height = m_height;
 	m_constantBufferData.width = m_width;
-	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(SkyConstantBuffer));
+	m_constantBufferData.light = m_orbitCycle.GetLight();
+	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
 	m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
@@ -340,14 +348,28 @@ void Moon::LoadHeightMap(Graphics* Renderer, const wchar_t* displacementmap, con
 
 	LoadWICTextureFromFileEx(Renderer->GetDevice().Get(), displacementmap, 0, D3D12_RESOURCE_FLAG_NONE, WIC_LOADER_FORCE_RGBA32, &displacementMap, displacementMapdecodedData, displacementMapData);
 
+	// Color Map วาด็
+	std::unique_ptr<uint8_t[]> colorMapdecodedData;
+	ID3D12Resource* colorMap;
+	D3D12_SUBRESOURCE_DATA colorMapData;
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC colorsrvDesc = {};
+	colorsrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	colorsrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	colorsrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	colorsrvDesc.Texture2D.MipLevels = 1;
+
+	LoadWICTextureFromFileEx(Renderer->GetDevice().Get(), colormap, 0, D3D12_RESOURCE_FLAG_NONE, WIC_LOADER_FORCE_RGBA32, &colorMap, colorMapdecodedData, colorMapData);
+
 	D3D12_RESOURCE_DESC texDesc = displacementMap->GetDesc();
 	m_width = texDesc.Width;
 	m_height = texDesc.Height;
 
 	const UINT64 displacementMapSize = GetRequiredIntermediateSize(displacementMap, 0, 1);
+	const UINT64 colorMapSize = GetRequiredIntermediateSize(colorMap, 0, 1);
 
 	Renderer->GetDevice()->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD), D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(displacementMapSize), D3D12_RESOURCE_STATE_GENERIC_READ,
+		&CD3DX12_RESOURCE_DESC::Buffer(displacementMapSize + colorMapSize), D3D12_RESOURCE_STATE_GENERIC_READ,
 		NULL, IID_PPV_ARGS(&m_uploadHeap));
 
 	//const unsigned int subresourceCount = texDesc.DepthOrArraySize * texDesc.MipLevels;
@@ -355,6 +377,11 @@ void Moon::LoadHeightMap(Graphics* Renderer, const wchar_t* displacementmap, con
 	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(displacementMap, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 	CD3DX12_CPU_DESCRIPTOR_HANDLE handleSRV(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_srvDescSize);
 	Renderer->CreateSRV(displacementMap, &srvDesc, handleSRV);
+
+	UpdateSubresources(Renderer->GetCommandList().Get(), colorMap, m_uploadHeap, displacementMapSize, 0, 1, &colorMapData);
+	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(colorMap, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
+	CD3DX12_CPU_DESCRIPTOR_HANDLE colorhandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 2, m_srvDescSize);
+	Renderer->CreateSRV(colorMap, &colorsrvDesc, colorhandle);
 }
 
 void Moon::CreateGeosphere(Graphics* Renderer, float radius, UINT numSubdivisions)
