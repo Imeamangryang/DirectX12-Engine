@@ -326,76 +326,76 @@ void Terrain::CreateConstantBuffer(Graphics* Renderer)
 	}
 }
 
-void Terrain::CreateMesh3D(Graphics* Renderer)
-{
-	int height = m_height;
-	int width = m_width;
-	int arraysize = height * width;
-
-	// Vertex Buffer 持失
-	Vertex1 *vertices = new Vertex1[arraysize];
-	for (int y = 0; y < height; ++y) 
-	{
-		for (int x = 0; x < width; ++x) 
-		{
-			vertices[y * width + x].position = XMFLOAT3((float)x, (float)y, 0.0f);
-		}
-	}
-
-	int bufferSize = sizeof(Vertex1) * arraysize;
-
-	Renderer->CreateCommittedBuffer(m_vertexBuffer, m_vertexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize));
-
-	D3D12_SUBRESOURCE_DATA vertexData = {};
-	vertexData.pData = vertices;
-	vertexData.RowPitch = bufferSize;
-	vertexData.SlicePitch = bufferSize;
-
-	UpdateSubresources(Renderer->GetCommandList().Get(), m_vertexBuffer, m_vertexBufferUpload, 0, 0, 1, &vertexData);
-	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
-
-	m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
-	m_vertexBufferView.StrideInBytes = sizeof(Vertex1);
-	m_vertexBufferView.SizeInBytes = bufferSize;
-
-
-	// Index Buffer 持失
-	arraysize = (m_width - 1) * (m_height - 1) * 6;
-
-	UINT* indices = new UINT[arraysize];
-	int i = 0;
-	for (int y = 0; y < m_height - 1; ++y)
-	{
-		for (int x = 0; x < m_width - 1; ++x)
-		{
-			indices[i++] = x + y * m_width;
-			indices[i++] = x + 1 + y * m_width;
-			indices[i++] = x + (y + 1) * m_width;
-
-			indices[i++] = x + 1 + y * m_width;
-			indices[i++] = x + 1 + (y + 1) * m_width;
-			indices[i++] = x + (y + 1) * m_width;
-		}
-	}
-
-	bufferSize = sizeof(UINT) * arraysize;
-
-	Renderer->CreateCommittedBuffer(m_indexBuffer, m_indexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize));
-
-	D3D12_SUBRESOURCE_DATA indexData = {};
-	indexData.pData = indices;
-	indexData.RowPitch = bufferSize;
-	indexData.SlicePitch = bufferSize;
-
-	UpdateSubresources(Renderer->GetCommandList().Get(), m_indexBuffer, m_indexBufferUpload, 0, 0, 1, &indexData);
-	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_indexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
-
-	m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
-	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	m_indexBufferView.SizeInBytes = bufferSize;
-
-	m_indexcount = arraysize;
-}
+//void Terrain::CreateMesh3D(Graphics* Renderer)
+//{
+//	int height = m_height;
+//	int width = m_width;
+//	int arraysize = height * width;
+//
+//	// Vertex Buffer 持失
+//	Vertex1 *vertices = new Vertex1[arraysize];
+//	for (int y = 0; y < height; ++y) 
+//	{
+//		for (int x = 0; x < width; ++x) 
+//		{
+//			vertices[y * width + x].position = XMFLOAT3((float)x, (float)y, 0.0f);
+//		}
+//	}
+//
+//	int bufferSize = sizeof(Vertex1) * arraysize;
+//
+//	Renderer->CreateCommittedBuffer(m_vertexBuffer, m_vertexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize));
+//
+//	D3D12_SUBRESOURCE_DATA vertexData = {};
+//	vertexData.pData = vertices;
+//	vertexData.RowPitch = bufferSize;
+//	vertexData.SlicePitch = bufferSize;
+//
+//	UpdateSubresources(Renderer->GetCommandList().Get(), m_vertexBuffer, m_vertexBufferUpload, 0, 0, 1, &vertexData);
+//	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+//
+//	m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+//	m_vertexBufferView.StrideInBytes = sizeof(Vertex1);
+//	m_vertexBufferView.SizeInBytes = bufferSize;
+//
+//
+//	// Index Buffer 持失
+//	arraysize = (m_width - 1) * (m_height - 1) * 6;
+//
+//	UINT* indices = new UINT[arraysize];
+//	int i = 0;
+//	for (int y = 0; y < m_height - 1; ++y)
+//	{
+//		for (int x = 0; x < m_width - 1; ++x)
+//		{
+//			indices[i++] = x + y * m_width;
+//			indices[i++] = x + 1 + y * m_width;
+//			indices[i++] = x + (y + 1) * m_width;
+//
+//			indices[i++] = x + 1 + y * m_width;
+//			indices[i++] = x + 1 + (y + 1) * m_width;
+//			indices[i++] = x + (y + 1) * m_width;
+//		}
+//	}
+//
+//	bufferSize = sizeof(UINT) * arraysize;
+//
+//	Renderer->CreateCommittedBuffer(m_indexBuffer, m_indexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize));
+//
+//	D3D12_SUBRESOURCE_DATA indexData = {};
+//	indexData.pData = indices;
+//	indexData.RowPitch = bufferSize;
+//	indexData.SlicePitch = bufferSize;
+//
+//	UpdateSubresources(Renderer->GetCommandList().Get(), m_indexBuffer, m_indexBufferUpload, 0, 0, 1, &indexData);
+//	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_indexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
+//
+//	m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
+//	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+//	m_indexBufferView.SizeInBytes = bufferSize;
+//
+//	m_indexcount = arraysize;
+//}
 
 void Terrain::LoadHeightMap(Graphics* Renderer, const wchar_t* displacementmap, const wchar_t* colormap)
 {

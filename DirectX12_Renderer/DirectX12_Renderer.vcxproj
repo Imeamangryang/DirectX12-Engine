@@ -148,7 +148,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Character.cpp" />
     <ClCompile Include="DirectionalLight.cpp" />
+    <ClCompile Include="FBXLoader.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
@@ -164,13 +166,16 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="Sky.cpp" />
     <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="Structures.h" />
     <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Character.h" />
     <ClInclude Include="D3DX12.h" />
     <ClInclude Include="DirectionalLight.h" />
+    <ClInclude Include="FBXLoader.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imgui_impl_dx12.h" />
@@ -289,6 +294,7 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\directxtk12_desktop_2019.2023.10.31.1\build\native\directxtk12_desktop_2019.targets" Condition="Exists('..\packages\directxtk12_desktop_2019.2023.10.31.1\build\native\directxtk12_desktop_2019.targets')" />
     <Import Project="..\packages\directxtex_desktop_2019.2023.10.31.1\build\native\directxtex_desktop_2019.targets" Condition="Exists('..\packages\directxtex_desktop_2019.2023.10.31.1\build\native\directxtex_desktop_2019.targets')" />
+    <Import Project="..\packages\fbxsdk.2020.0.1.2\build\native\fbxsdk.targets" Condition="Exists('..\packages\fbxsdk.2020.0.1.2\build\native\fbxsdk.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -296,5 +302,6 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\directxtk12_desktop_2019.2023.10.31.1\build\native\directxtk12_desktop_2019.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtk12_desktop_2019.2023.10.31.1\build\native\directxtk12_desktop_2019.targets'))" />
     <Error Condition="!Exists('..\packages\directxtex_desktop_2019.2023.10.31.1\build\native\directxtex_desktop_2019.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtex_desktop_2019.2023.10.31.1\build\native\directxtex_desktop_2019.targets'))" />
+    <Error Condition="!Exists('..\packages\fbxsdk.2020.0.1.2\build\native\fbxsdk.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\fbxsdk.2020.0.1.2\build\native\fbxsdk.targets'))" />
   </Target>
 </Project>

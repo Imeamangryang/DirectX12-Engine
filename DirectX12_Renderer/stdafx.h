@@ -1,5 +1,12 @@
 #pragma once
 #include <iostream>
+#include "wrl.h"
+#include <vector>
+#include <algorithm>
+#include "fbxsdk.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_dx12.h"
 #include "imgui/imgui_impl_win32.h"
+#include "MathHelper.h"
+#include "WICTextureLoader.h"
+

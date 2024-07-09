@@ -10,7 +10,6 @@
 #include <DirectXMath.h>
 #include <D3DCompiler.h>
 #include <stdexcept>
-#include "wrl.h"
 #include "stdafx.h"
 
 namespace graphics {

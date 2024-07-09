@@ -33,6 +33,7 @@ static void HandleMouseMove(LPARAM lp) {
 		int moveY = lastMouseY - y;
 		moveY = moveY > 20 ? 20 : moveY;
 		moveY = moveY < -20 ? -20 : moveY;
+
 		pScene->HandleMouseInput(moveX, moveY);
 	}
 
@@ -43,8 +44,9 @@ static void HandleMouseMove(LPARAM lp) {
 
 static LRESULT CALLBACK WndProc(HWND win , UINT msg, WPARAM wp, LPARAM lp) {
 	extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	if (ImGui_ImplWin32_WndProcHandler(win, msg, wp, lp))
+	if (ImGui_ImplWin32_WndProcHandler(win, msg, wp, lp)) { 
 		return true;
+	}
 	else {
 		switch (msg)
 		{
@@ -58,7 +60,9 @@ static LRESULT CALLBACK WndProc(HWND win , UINT msg, WPARAM wp, LPARAM lp) {
 			return 0;
 
 		case WM_MOUSEMOVE:
-			HandleMouseMove(lp);
+			if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_AnyWindow)) {
+				HandleMouseMove(lp);
+			}
 			break;
 
 		case WM_KEYDOWN:

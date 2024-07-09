@@ -21,6 +21,8 @@ Scene::Scene(int height, int width, Graphics* renderer) :
 	CloseCommandList();
 	m_renderer->LoadAsset();
 
+
+	// Object
 	m_terrain.ClearUnusedUploadBuffersAfterInit();
 	m_sky.ClearUnusedUploadBuffersAfterInit();
 }
@@ -40,7 +42,27 @@ void Scene::Draw()
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
-	ImGui::ShowDemoWindow();
+	{
+		ImGui::Begin("Details", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+
+		ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+		if (!ImGui::CollapsingHeader("Draw Modes")) {
+			if (ImGui::Button("Solid")) {
+				m_DrawMode = 1;
+			}
+			if (ImGui::Button("WireFrame")) {
+				m_DrawMode = 2;
+			}
+		}
+		if (!ImGui::CollapsingHeader("Objects")) {
+			ImGui::Text("Terrain");
+			ImGui::Text("Sky");
+		}
+
+		
+		ImGui::End();
+	}
 
 	m_renderer->ResetPipeline();
 

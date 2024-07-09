@@ -1,11 +1,7 @@
 #pragma once
 
 #include "Renderer.h"
-#include "WICTextureLoader.h"
-#include "MathHelper.h"
 #include "Terrain.h"
-#include <iostream>
-#include <vector>
 #include "stdafx.h"
 
 using namespace graphics;

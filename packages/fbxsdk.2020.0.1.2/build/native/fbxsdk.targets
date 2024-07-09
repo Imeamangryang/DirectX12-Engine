@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">  
+  <PropertyGroup>
+    <fbxsdk-Libraries>$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)</fbxsdk-Libraries>
+    <fbxsdk-DependencyRoot>$(MSBuildThisFileDirectory)..\..\lib\$(Configuration)</fbxsdk-DependencyRoot>
+    <fbxsdk-Dependencies>$([MSbuild]::Unescape($([System.String]::Join(';', $([System.IO.Directory]::GetFiles($(fbxsdk-DependencyRoot), '*.lib'))))))</fbxsdk-Dependencies>
+    <fbxsdk-IncludeRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\include'))</fbxsdk-IncludeRoot>
+    <fbxsdk-IncludeSubdirectories>$([System.String]::Join(';', $([System.IO.Directory]::GetDirectories($(fbxsdk-IncludeRoot)))))</fbxsdk-IncludeSubdirectories>
+    <fbxsdk-Includes>$(fbxsdk-IncludeRoot);$([MSbuild]::Unescape($(fbxsdk-IncludeSubdirectories)))</fbxsdk-Includes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(fbxsdk-Libraries)\*.*">
+      <InProject>False</InProject>
+      <Link>%(FileName)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory> 
+    </None>
+  </ItemGroup>
+
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalLibraryDirectories>$(fbxsdk-Libraries);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(fbxsdk-Dependencies);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(fbxsdk-Includes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>FBXSDK_SHARED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>

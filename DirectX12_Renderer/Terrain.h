@@ -18,10 +18,6 @@ struct ConstantBuffer
 	UINT width;
 };
 
-struct Vertex1 
-{
-	XMFLOAT3 position;
-};
 
 struct Vertex
 {
