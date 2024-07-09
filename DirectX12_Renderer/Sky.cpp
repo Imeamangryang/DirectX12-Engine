@@ -5,7 +5,6 @@ Sky::Sky(Graphics* renderer) :
 	m_rootSignature3D(nullptr),
 	m_srvHeap(nullptr),
 	m_uploadHeap(nullptr),
-	m_image(),
 	m_width(0),
 	m_height(0),
 	m_CBV(nullptr),
@@ -13,7 +12,7 @@ Sky::Sky(Graphics* renderer) :
 	m_vertexBufferUpload(nullptr),
 	m_indexBuffer(nullptr),
 	m_indexBufferUpload(nullptr),
-	m_orbitCycle(5760)
+	m_worldTransform(MathHelper::Identity4x4())
 {
 	LoadHeightMap(renderer, L"resource/TychoSkymap.t5_04096x02048.tif", L"resource/lroc_color_poles_4k.tif");
 
@@ -54,16 +53,6 @@ Sky::~Sky()
 		m_vertexBuffer->Release();
 		m_vertexBuffer = nullptr;
 	}
-	if (m_pipelineState3D)
-	{
-		m_pipelineState3D->Release();
-		m_pipelineState3D = nullptr;
-	}
-	if (m_rootSignature3D)
-	{
-		m_rootSignature3D->Release();
-		m_rootSignature3D = nullptr;
-	}
 	if (m_CBV)
 	{
 		m_CBV->Unmap(0, nullptr);
@@ -75,26 +64,27 @@ Sky::~Sky()
 
 void Sky::Draw3D(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye)
 {
-	m_commandList->SetPipelineState(m_pipelineState3D);
-	m_commandList->SetGraphicsRootSignature(m_rootSignature3D);
+    m_commandList->SetPipelineState(m_pipelineState3D.Get());
+    m_commandList->SetGraphicsRootSignature(m_rootSignature3D.Get());
 
-	m_constantBufferData.viewproj = viewproj;
-	m_constantBufferData.eye = eye;
-	m_constantBufferData.height = m_height;
-	m_constantBufferData.width = m_width;
-	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(m_constantBufferData));
+    m_constantBufferData.world = m_worldTransform;
+    m_constantBufferData.viewproj = viewproj;
+    m_constantBufferData.eye = eye;
+    m_constantBufferData.height = m_height;
+    m_constantBufferData.width = m_width;
+    memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(m_constantBufferData));
 
-	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
-	m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
-	m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
-	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_srvDescSize);
-	m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
+    ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
+    m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
+    m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
+    CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_srvDescSize);
+    m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
 
-	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // describe how to read the vertex buffer.
-	m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-	m_commandList->IASetIndexBuffer(&m_indexBufferView);
+    m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // describe how to read the vertex buffer.
+    m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
-	m_commandList->DrawIndexedInstanced(m_indexcount, 1, 0, 0, 0);
+    m_commandList->DrawIndexedInstanced(m_indexcount, 1, 0, 0, 0);
 }
 
 void Sky::ClearUnusedUploadBuffersAfterInit()
@@ -176,7 +166,7 @@ void Sky::InitPipeline3D(Graphics* Renderer)
 	inputLayoutDesc.pInputElementDescs = inputLayout;
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-	psoDesc.pRootSignature = m_rootSignature3D;
+	psoDesc.pRootSignature = m_rootSignature3D.Get();
 	psoDesc.InputLayout = inputLayoutDesc;
 	psoDesc.VS = VSBytecode;
 	psoDesc.PS = PSBytecode;
@@ -196,7 +186,7 @@ void Sky::InitPipeline3D(Graphics* Renderer)
 
 void Sky::CreateConstantBuffer(Graphics* Renderer)
 {
-	UINT64 bufferSize = sizeof(ConstantBuffer);
+	UINT64 bufferSize = sizeof(SkyConstantBuffer);
 	Renderer->CreateBuffer(m_CBV, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize));
 	m_CBV->SetName(L"CBV");
 

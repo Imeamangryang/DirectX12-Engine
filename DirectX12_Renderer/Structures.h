@@ -1,9 +1,29 @@
 #pragma once
 #include "stdafx.h"
+#include "Light.h"
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace std;
+
+struct ConstantBuffer
+{
+	XMFLOAT4X4 world;
+	XMFLOAT4X4 viewproj;
+	XMFLOAT4 eye;
+	LightSource light;
+	UINT height;
+	UINT width;
+};
+
+struct SkyConstantBuffer
+{
+	XMFLOAT4X4 world;
+	XMFLOAT4X4 viewproj;
+	XMFLOAT4 eye;
+	UINT height;
+	UINT width;
+};
 
 struct Vertex
 {
@@ -23,7 +43,6 @@ struct Vertex
 	XMFLOAT3 TangentU;
 	XMFLOAT2 TexC;
 };
-
 
 struct FbxMaterialInfo
 {

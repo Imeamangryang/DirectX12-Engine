@@ -160,6 +160,7 @@
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="MathHelper.cpp" />
+    <ClCompile Include="Moon.cpp" />
     <ClCompile Include="OrbitCycle.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="Light.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="MathHelper.h" />
+    <ClInclude Include="Moon.h" />
     <ClInclude Include="OrbitCycle.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />

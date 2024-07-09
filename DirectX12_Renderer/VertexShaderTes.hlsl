@@ -28,6 +28,7 @@ struct LightData {
 
 cbuffer ConstantBuffer : register(b0)
 {
+    float4x4 world;
 	float4x4 viewproj;
 	float4 eye;
 	LightData light;

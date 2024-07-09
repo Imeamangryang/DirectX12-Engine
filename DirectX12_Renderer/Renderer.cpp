@@ -335,7 +335,7 @@ namespace graphics {
 	}
 
 	// RootSignature 积己 窃荐
-	void Graphics::createRootSignature(CD3DX12_ROOT_SIGNATURE_DESC* rootDesc, ID3D12RootSignature*& rootSignature)
+	void Graphics::createRootSignature(CD3DX12_ROOT_SIGNATURE_DESC* rootDesc, ComPtr<ID3D12RootSignature>& rootSignature)
 	{
 		ID3DBlob* error;
 		ID3DBlob* signature;
@@ -352,7 +352,7 @@ namespace graphics {
 	}
 
 	// PipelineStateObject 积己 窃荐
-	void Graphics::createPSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC* psoDesc, ID3D12PipelineState*& pipelineState)
+	void Graphics::createPSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC* psoDesc, ComPtr<ID3D12PipelineState>& pipelineState)
 	{
 		if (FAILED(m_device->CreateGraphicsPipelineState(psoDesc, IID_PPV_ARGS(&pipelineState))))
 		{

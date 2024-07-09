@@ -1,18 +1,10 @@
 #pragma once
 
 #include "Renderer.h"
-#include "Terrain.h"
 #include "stdafx.h"
+#include "Structures.h"
 
 using namespace graphics;
-
-struct SkyConstantBuffer
-{
-	XMFLOAT4X4 viewproj;
-	XMFLOAT4 eye;
-	UINT height;
-	UINT width;
-};
 
 class Sky
 {
@@ -23,8 +15,6 @@ public:
 	void Draw3D(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye);
 
 	void ClearUnusedUploadBuffersAfterInit();
-
-	OrbitCycle GetOrbitcycle() { return m_orbitCycle; }
 
 private:
 	void InitPipeline3D(Graphics* Renderer);
@@ -37,14 +27,13 @@ private:
 
 	ComPtr<ID3D12DescriptorHeap> m_srvHeap;
 	ID3D12Resource* m_uploadHeap;
-	std::vector<unsigned char> m_image;
 	UINT m_width;
 	UINT m_height;
 
-	ID3D12PipelineState* m_pipelineState3D;
-	ID3D12RootSignature* m_rootSignature3D;
+	ComPtr<ID3D12PipelineState> m_pipelineState3D;
+	ComPtr<ID3D12RootSignature> m_rootSignature3D;
 	ID3D12Resource* m_CBV;
-	ConstantBuffer m_constantBufferData;
+	SkyConstantBuffer m_constantBufferData;
 	UINT8* m_cbvDataBegin;
 	UINT m_srvDescSize;
 
@@ -55,5 +44,6 @@ private:
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW	m_indexBufferView;
 	UINT m_indexcount;
-	OrbitCycle m_orbitCycle;
+
+	XMFLOAT4X4 m_worldTransform;
 };

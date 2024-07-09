@@ -4,6 +4,7 @@
 #include "Terrain.h"
 #include "Camera.h"
 #include "Sky.h"
+#include "Moon.h"
 
 using namespace graphics;
 
@@ -39,10 +40,12 @@ private:
 	void SetViewport();
 
 	Graphics* m_renderer;
-	Terrain m_terrain;
-	Sky m_sky;
 	Camera m_camera;
 	D3D12_VIEWPORT m_viewport;
 	D3D12_RECT m_scissorRect;
 	int m_DrawMode = 1;
+
+	Terrain m_terrain;
+	Sky m_sky;
+	Moon m_moon;
 };
