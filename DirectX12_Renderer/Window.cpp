@@ -36,8 +36,13 @@ Window::Window(LPCWSTR appName, int height, int width, WNDPROC WndProc, bool isF
 	int posX, posY, h, w;
 
 	// Determine the resolution of the clients desktop screen.
-	h = GetSystemMetrics(SM_CYSCREEN);
-	w = GetSystemMetrics(SM_CXSCREEN);
+	//h = GetSystemMetrics(SM_CYSCREEN);
+	//w = GetSystemMetrics(SM_CXSCREEN);
+
+	RECT R = { 0, 0, width, height };
+	AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
+	h = R.right - R.left;
+	w = R.bottom - R.top;
 
 	if (mFullscreen) {
 		// If full screen set, the screen to maximum size of the users desktop and 32bit.
@@ -77,7 +82,7 @@ Window::Window(LPCWSTR appName, int height, int width, WNDPROC WndProc, bool isF
 	SetForegroundWindow(mWindow); // returns zero if window already in foreground, non-zero if it wasn't. We don't care so ignoring return value.
 
 								 // Hide the mouse cursor.
-	ShowCursor(true); // returns the current display count. We don't really care, so we're ignoring it, but it should be zero.
+	ShowCursor(false); // returns the current display count. We don't really care, so we're ignoring it, but it should be zero.
 }
 
 Window::~Window() {

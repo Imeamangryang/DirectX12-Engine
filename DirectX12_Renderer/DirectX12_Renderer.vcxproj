@@ -161,6 +161,7 @@
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="MathHelper.cpp" />
     <ClCompile Include="Moon.cpp" />
+    <ClCompile Include="Object.cpp" />
     <ClCompile Include="OrbitCycle.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Main.cpp" />
@@ -189,6 +190,7 @@
     <ClInclude Include="Main.h" />
     <ClInclude Include="MathHelper.h" />
     <ClInclude Include="Moon.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="OrbitCycle.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />

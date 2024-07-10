@@ -1,6 +1,6 @@
 #include "Sky.h"
 
-Sky::Sky(Graphics* renderer) :
+Sky::Sky(Graphics* renderer) : Object(renderer),
 	m_pipelineState3D(nullptr),
 	m_rootSignature3D(nullptr),
 	m_srvHeap(nullptr),
@@ -19,6 +19,8 @@ Sky::Sky(Graphics* renderer) :
 	InitPipeline3D(renderer);
 
 	CreateGeosphere(renderer, 50000, 10);
+
+	m_objectname = "skydome";
 }
 
 Sky::~Sky()

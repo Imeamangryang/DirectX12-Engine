@@ -4,10 +4,11 @@
 #include "OrbitCycle.h"
 #include "stdafx.h"
 #include "Structures.h"
+#include "Object.h"
 
 using namespace graphics;
 
-class Terrain
+class Terrain : public Object
 {
 public:
 	Terrain(Graphics* renderer);
@@ -49,7 +50,6 @@ private:
 	ID3D12Resource* m_indexBufferUpload;
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW	m_indexBufferView;
-	UINT m_indexcount;
 	OrbitCycle m_orbitCycle;
 	XMFLOAT4X4 m_worldTransform;
 };

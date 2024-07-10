@@ -53,16 +53,59 @@ void Scene::Draw()
 			if (ImGui::Button("Solid")) {
 				m_DrawMode = 1;
 			}
+			ImGui::SameLine();
 			if (ImGui::Button("WireFrame")) {
 				m_DrawMode = 2;
 			}
 		}
 		if (!ImGui::CollapsingHeader("Objects")) {
-			ImGui::Text("Terrain");
-			ImGui::Text("Sky");
-		}
+			if (ImGui::TreeNode(m_sky.m_objectname.c_str())) {
+				ImGui::Text("Translation");
+				ImGui::Text("Rotation");
+				ImGui::Text("Scaling");
+				ImGui::TreePop();
+			}
+			if (ImGui::TreeNode(m_terrain.m_objectname.c_str())) {
+				ImGui::Text("Translation");
+				ImGui::DragFloat("Translation X", &m_terrain.m_translation_x, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Translation Y", &m_terrain.m_translation_y, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Translation Z", &m_terrain.m_translation_z, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::Text("Rotation");
+				ImGui::DragFloat("Rotation X", &m_terrain.m_rotation_x, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Rotation Y", &m_terrain.m_rotation_y, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Rotation Z", &m_terrain.m_rotation_z, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::Text("Scaling");
+				ImGui::DragFloat("Scale X", &m_terrain.m_scale_x, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Scale Y", &m_terrain.m_scale_y, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Scale Z", &m_terrain.m_scale_z, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
 
-		
+				ImGui::BulletText("Vertex Count : %d", m_terrain.m_vertexcount);
+				ImGui::SameLine();
+				ImGui::BulletText("Index Count : %d", m_terrain.m_indexcount);
+
+				ImGui::TreePop();
+			}
+			if (ImGui::TreeNode(m_moon.m_objectname.c_str())) {
+				ImGui::Text("Translation");
+				ImGui::DragFloat("Translation X", &m_moon.m_translation_x, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Translation Y", &m_moon.m_translation_y, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Translation Z", &m_moon.m_translation_z, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::Text("Rotation");
+				ImGui::DragFloat("Rotation X", &m_moon.m_rotation_x, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Rotation Y", &m_moon.m_rotation_y, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Rotation Z", &m_moon.m_rotation_z,1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::Text("Scaling");
+				ImGui::DragFloat("Scale X", &m_moon.m_scale_x, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Scale Y", &m_moon.m_scale_y, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Scale Z", &m_moon.m_scale_z, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+
+				ImGui::BulletText("Vertex Count : %d", m_moon.m_vertexcount);
+				ImGui::SameLine();
+				ImGui::BulletText("Index Count : %d", m_moon.m_indexcount);
+
+				ImGui::TreePop();
+			}
+		}
 		ImGui::End();
 	}
 
@@ -136,7 +179,7 @@ void Scene::HandleInput(const InputDirections& directions, float deltaTime)
 	}
 }
 
-void Scene::HandleMouseInput(int x, int y)
+void Scene::HandleMouseInput(float x, float y)
 {
 	m_camera.Pitch(ROT_ANGLE * y);
 	m_camera.Yaw(-ROT_ANGLE * x);

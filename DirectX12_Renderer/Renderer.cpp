@@ -248,6 +248,7 @@ namespace graphics {
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+		io.MouseDrawCursor = true;
 
 		// ImGUI √ ±‚»≠
 		ImGui_ImplWin32_Init(win);

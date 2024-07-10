@@ -3,10 +3,11 @@
 #include "Renderer.h"
 #include "stdafx.h"
 #include "Structures.h"
+#include "Object.h"
 
 using namespace graphics;
 
-class Sky
+class Sky : public Object
 {
 public:
 	Sky(Graphics* renderer);

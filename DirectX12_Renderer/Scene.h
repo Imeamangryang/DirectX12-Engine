@@ -33,7 +33,7 @@ public:
 
 	void HandleInput(const InputDirections& directions, float deltaTime);
 
-	void HandleMouseInput(int x, int y);
+	void HandleMouseInput(float x, float y);
 
 private:
 	void CloseCommandList();

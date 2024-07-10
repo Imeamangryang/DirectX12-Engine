@@ -27,10 +27,10 @@ static void HandleMouseMove(LPARAM lp) {
 	else { // calculate how far we've moved from the last time we updated and pass that info to the scene.
 		// clamp the values as well so that when we're in windowed mode, we don't cause massive jumps when the
 		// mouse moves out of the window and then back in at a completely different position.
-		int moveX = lastMouseX - x;
+		float moveX = lastMouseX - x;
 		moveX = moveX > 20 ? 20 : moveX;
 		moveX = moveX < -20 ? -20 : moveX;
-		int moveY = lastMouseY - y;
+		float moveY = lastMouseY - y;
 		moveY = moveY > 20 ? 20 : moveY;
 		moveY = moveY < -20 ? -20 : moveY;
 
@@ -58,12 +58,16 @@ static LRESULT CALLBACK WndProc(HWND win , UINT msg, WPARAM wp, LPARAM lp) {
 		case WM_CLOSE:
 			DestroyWindow(win);
 			return 0;
-
-		case WM_MOUSEMOVE:
-			if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_AnyWindow)) {
-				HandleMouseMove(lp);
+			
+        case WM_MOUSEMOVE:
+            if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_AnyWindow) && (wp & MK_RBUTTON)) {
+                HandleMouseMove(lp);
+            }
+			else {
+				lastMouseX = GET_X_LPARAM(lp);
+				lastMouseY = GET_Y_LPARAM(lp);
 			}
-			break;
+            break;
 
 		case WM_KEYDOWN:
 			switch (wp)

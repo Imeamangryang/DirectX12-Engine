@@ -102,6 +102,9 @@
     <ClCompile Include="Terrain.cpp">
       <Filter>Source Files\Objects</Filter>
     </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h">
@@ -174,6 +177,9 @@
       <Filter>Header Files\Util</Filter>
     </ClInclude>
     <ClInclude Include="Moon.h">
+      <Filter>Header Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
       <Filter>Header Files\Objects</Filter>
     </ClInclude>
   </ItemGroup>

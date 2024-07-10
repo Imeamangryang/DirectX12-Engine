@@ -1,6 +1,6 @@
 #include "Terrain.h"
 
-Terrain::Terrain(Graphics* renderer) :
+Terrain::Terrain(Graphics* renderer) : Object(renderer),
 	m_pipelineStateTes(nullptr),
 	m_pipelineStateTes2(nullptr),
 	m_rootSignatureTes(nullptr),
@@ -19,14 +19,14 @@ Terrain::Terrain(Graphics* renderer) :
 {
 	LoadHeightMap(renderer, L"resource/gebco_08_rev_elev_21600x10800.PNG", L"resource/land_shallow_topo_2048.tif");
 	
-	
-
 	InitPipelineTes(renderer);
 	InitPipelineTes_Wireframe(renderer);
 
 	CreateGeosphere(renderer, 2000, 10);
 
 	XMStoreFloat4x4(&m_worldTransform, XMMatrixTranslation(1.0f, 1.0f, 1.0f));
+
+	m_objectname = "Earth";
 }
 
 Terrain::~Terrain()
@@ -77,6 +77,17 @@ void Terrain::DrawTes(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X
 
 	m_orbitCycle.Update();
 
+	// Transform
+	XMStoreFloat4x4(&m_worldTransform,
+		XMMatrixTransformation(
+			XMVectorZero(),
+			XMVectorZero(),
+			XMVectorSet(m_scale_x, m_scale_y, m_scale_z, 0.0f),
+			XMVectorZero(),
+			XMQuaternionRotationRollPitchYaw(XMConvertToRadians(m_rotation_x), XMConvertToRadians(m_rotation_y), XMConvertToRadians(m_rotation_z)),
+			XMVectorSet(m_translation_x, m_translation_y, m_translation_z, 0.0)
+		));
+
 	m_constantBufferData.world = m_worldTransform;
 	m_constantBufferData.viewproj = viewproj;
 	m_constantBufferData.eye = eye;
@@ -106,6 +117,17 @@ void Terrain::DrawTes_Wireframe(ComPtr<ID3D12GraphicsCommandList> m_commandList,
 	m_commandList->SetGraphicsRootSignature(m_rootSignatureTes2.Get());
 
 	m_orbitCycle.Update();
+
+	// Transform
+	XMStoreFloat4x4(&m_worldTransform,
+		XMMatrixTransformation(
+			XMVectorZero(),
+			XMVectorZero(),
+			XMVectorSet(m_scale_x, m_scale_y, m_scale_z, 0.0f),
+			XMVectorZero(),
+			XMQuaternionRotationRollPitchYaw(XMConvertToRadians(m_rotation_x), XMConvertToRadians(m_rotation_y), XMConvertToRadians(m_rotation_z)),
+			XMVectorSet(m_translation_x, m_translation_y, m_translation_z, 0.0)
+		));
 
 	m_constantBufferData.world = m_worldTransform;
 	m_constantBufferData.viewproj = viewproj;
@@ -615,6 +637,9 @@ void Terrain::CreateGeosphere(Graphics* Renderer, float radius, UINT numSubdivis
 		XMStoreFloat3(&vertices[i].TangentU, XMVector3Normalize(T));
 	}
 
+	m_vertexcount = vertices.size();
+	m_indexcount = indices.size();
+
 	int bufferSize = sizeof(Vertex) * vertices.size();
 
 	Renderer->CreateCommittedBuffer(m_vertexBuffer, m_vertexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize));
@@ -646,6 +671,4 @@ void Terrain::CreateGeosphere(Graphics* Renderer, float radius, UINT numSubdivis
 	m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
 	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	m_indexBufferView.SizeInBytes = bufferSize;
-
-	m_indexcount = indices.size();
 }

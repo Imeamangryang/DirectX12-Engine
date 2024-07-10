@@ -1,6 +1,6 @@
 #include "Moon.h"
 
-Moon::Moon(Graphics* renderer) :
+Moon::Moon(Graphics* renderer) : Object(renderer),
 	m_pipelineStateTes(nullptr),
 	m_rootSignatureTes(nullptr),
 	m_srvHeap(nullptr),
@@ -22,7 +22,9 @@ Moon::Moon(Graphics* renderer) :
 
 	CreateGeosphere(renderer, 500, 10);
 
-	XMStoreFloat4x4(&m_worldTransform, XMMatrixTranslation(1.0f, 5000.0f, 1.0f));
+	m_objectname = "Moon";
+
+	m_translation_y = 5000.0f;
 }
 
 Moon::~Moon()
@@ -71,6 +73,17 @@ void Moon::DrawTes(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 v
 	m_commandList->SetPipelineState(m_pipelineStateTes.Get());
 	m_commandList->SetGraphicsRootSignature(m_rootSignatureTes.Get());
 
+	// Transform
+	XMStoreFloat4x4(&m_worldTransform,
+		XMMatrixTransformation(
+			XMVectorZero(),
+			XMVectorZero(),
+			XMVectorSet(m_scale_x, m_scale_y, m_scale_z, 0.0f),
+			XMVectorZero(),
+			XMQuaternionRotationRollPitchYaw(XMConvertToRadians(m_rotation_x), XMConvertToRadians(m_rotation_y), XMConvertToRadians(m_rotation_z)),
+			XMVectorSet(m_translation_x, m_translation_y, m_translation_z, 0.0)
+		));
+
 	m_constantBufferData.world = m_worldTransform;
 	m_constantBufferData.viewproj = viewproj;
 	m_constantBufferData.eye = eye;
@@ -98,6 +111,17 @@ void Moon::DrawTes_Wireframe(ComPtr<ID3D12GraphicsCommandList> m_commandList, XM
 {
 	m_commandList->SetPipelineState(m_pipelineStateTes_Wireframe.Get());
 	m_commandList->SetGraphicsRootSignature(m_rootSignatureTes.Get());
+
+	// Transform
+	XMStoreFloat4x4(&m_worldTransform,
+		XMMatrixTransformation(
+			XMVectorZero(),
+			XMVectorZero(),
+			XMVectorSet(m_scale_x, m_scale_y, m_scale_z, 0.0f),
+			XMVectorZero(),
+			XMQuaternionRotationRollPitchYaw(XMConvertToRadians(m_rotation_x), XMConvertToRadians(m_rotation_y), XMConvertToRadians(m_rotation_z)),
+			XMVectorSet(m_translation_x, m_translation_y, m_translation_z, 0.0)
+		));
 
 	m_constantBufferData.world = m_worldTransform;
 	m_constantBufferData.viewproj = viewproj;
@@ -535,6 +559,9 @@ void Moon::CreateGeosphere(Graphics* Renderer, float radius, UINT numSubdivision
 		XMStoreFloat3(&vertices[i].TangentU, XMVector3Normalize(T));
 	}
 
+	m_vertexcount = vertices.size();
+	m_indexcount = indices.size();
+
 	int bufferSize = sizeof(Vertex) * vertices.size();
 
 	Renderer->CreateCommittedBuffer(m_vertexBuffer, m_vertexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize));
@@ -566,6 +593,4 @@ void Moon::CreateGeosphere(Graphics* Renderer, float radius, UINT numSubdivision
 	m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
 	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	m_indexBufferView.SizeInBytes = bufferSize;
-
-	m_indexcount = indices.size();
 }
