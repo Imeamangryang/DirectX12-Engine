@@ -84,9 +84,6 @@
     <ClCompile Include="Sky.cpp">
       <Filter>Source Files\Objects</Filter>
     </ClCompile>
-    <ClCompile Include="Terrain.cpp">
-      <Filter>Source Files\Objects</Filter>
-    </ClCompile>
     <ClCompile Include="MathHelper.cpp">
       <Filter>Source Files\Util</Filter>
     </ClCompile>
@@ -100,6 +97,9 @@
       <Filter>Header Files\Util</Filter>
     </ClCompile>
     <ClCompile Include="Moon.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
+    <ClCompile Include="Terrain.cpp">
       <Filter>Source Files\Objects</Filter>
     </ClCompile>
   </ItemGroup>

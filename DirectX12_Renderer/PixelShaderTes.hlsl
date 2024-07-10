@@ -37,7 +37,13 @@ float4 PSTes(DS_OUTPUT input) : SV_TARGET
 {
 	float3 norm = input.norm.xyz;
 	
-	float4 color = float4(colormap.Sample(cmsampler, input.tex));
+    float theta = atan2(input.norm.z, input.norm.x);
+    if (theta < 0.0f)
+        theta += 2.0f * 3.14159265359f;
+    float phi = acos(input.norm.y);
+    float2 tex = float2(theta / (2.0f * 3.14159265359f), phi / 3.14159265359f);
+	
+	float4 color = float4(colormap.Sample(cmsampler, tex));
 
 	float4 ambient = color * light.amb;
 	float4 diffuse = color * light.dif * dot(-light.dir, norm);

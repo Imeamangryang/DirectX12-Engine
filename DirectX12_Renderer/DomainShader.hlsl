@@ -62,6 +62,8 @@ DS_OUTPUT DS(
 	float scale = height / 150;
 
 	float theta = atan2(output.norm.z, output.norm.x);
+    if (theta < 0.0f)
+        theta += 2.0f * 3.14159265359f;
 	float phi = acos(output.norm.y);
 
 	output.tex.x = theta / (2.0f * 3.14159265359f);
@@ -72,18 +74,6 @@ DS_OUTPUT DS(
 	output.pos.xyz += output.norm * hei;
 
 	output.pos = float4(output.pos.xyz, 1.0f);
-
-	//float3 x1 = displacementmap.Load(int3(output.pos.xy + int2(1, 0), 0));
-	//float3 x2 = displacementmap.Load(int3(output.pos.xy + int2(-1, 0), 0));
-	//float3 y1 = displacementmap.Load(int3(output.pos.xy + int2(0, 1), 0));
-	//float3 y2 = displacementmap.Load(int3(output.pos.xy + int2(0, -1), 0));
-
-	//// h1 = x1 - x2
-	//// h2 = y1 - y2
-
-	//float x = -2 * (x1.z - x2.z);
-	//float y = -2 * (y1.z - y2.z);
-	//float z = 4;
 
 	float2 b = output.tex.xy + float2(0.0f, -0.3f / height);
 	float2 c = output.tex.xy + float2(0.3f / width, -0.3f / height);
@@ -119,7 +109,7 @@ DS_OUTPUT DS(
 
 	normal = mul(TBN, normal);
 
-	output.norm = float4(normal, 1.0f);
+	//output.norm = float4(normal, 1.0f);
 
 	// MVP º¯È¯
 	output.pos = mul(world, output.pos);
