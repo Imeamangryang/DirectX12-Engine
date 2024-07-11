@@ -362,7 +362,6 @@ void Moon::LoadHeightMap(Graphics* Renderer, const wchar_t* displacementmap, con
 		&CD3DX12_RESOURCE_DESC::Buffer(displacementMapSize + colorMapSize), D3D12_RESOURCE_STATE_GENERIC_READ,
 		NULL, IID_PPV_ARGS(&m_uploadHeap));
 
-	//const unsigned int subresourceCount = texDesc.DepthOrArraySize * texDesc.MipLevels;
 	UpdateSubresources(Renderer->GetCommandList().Get(), displacementMap, m_uploadHeap, 0, 0, 1, &displacementMapData);
 	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(displacementMap, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE));
 	CD3DX12_CPU_DESCRIPTOR_HANDLE handleSRV(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_srvDescSize);

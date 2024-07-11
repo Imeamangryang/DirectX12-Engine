@@ -7,7 +7,6 @@
 
 using namespace graphics;
 
-
 class Character : public Object
 {
 public:
@@ -15,7 +14,6 @@ public:
 	~Character();
 
 	void Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye);
-	void DrawWireframe(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye);
 
 	void ClearUnusedUploadBuffersAfterInit();
 

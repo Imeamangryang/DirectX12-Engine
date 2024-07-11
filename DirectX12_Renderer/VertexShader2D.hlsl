@@ -1,10 +1,14 @@
 struct VS_INPUT
 {
-	float3 pos : POSITION;
+    float3 pos : POSITION;
+    float3 norm : NORMAL;
+    float3 tan : TANGENT;
+    float2 tex : TEXCOORD;
 };
 
 struct VS_OUTPUT {
 	float4 pos : SV_POSITION;
+    float2 tex : TEXCOORD;
 };
 
 cbuffer ConstantBuffer : register(b0)
@@ -23,6 +27,8 @@ VS_OUTPUT VS2D(VS_INPUT input) {
     float4 worldPos = mul(world, float4(input.pos, 1.0f));
     // 뷰-프로젝션 변환 적용
     output.pos = mul(worldPos, viewproj);
+    
+    output.tex = input.tex;
 
 	return output;
 }

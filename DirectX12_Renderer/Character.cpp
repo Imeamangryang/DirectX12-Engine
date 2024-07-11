@@ -24,9 +24,13 @@ Character::Character(Graphics* renderer) : Object(renderer),
 	InitPipeline(renderer);;
 	InitPipelineWireframe(renderer);
 
-	LoadFBXModel(renderer, "models/SK_Fox.fbx");
+	LoadFBXModel(renderer, "models/Wolf/Wolf.fbx");
 
 	m_objectname = "Character";
+
+	m_scale_x = 100.0f;
+	m_scale_y = 100.0f;
+	m_scale_z = 100.0f;
 
 	m_rotation_x = 90.0f;
 }
@@ -82,8 +86,6 @@ void Character::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4
 	m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_srvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
-	CD3DX12_GPU_DESCRIPTOR_HANDLE srvhandle2(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_srvDescSize);
-	m_commandList->SetGraphicsRootDescriptorTable(2, srvhandle2);
 
 	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // describe how to read the vertex buffer.
 	m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
@@ -113,23 +115,28 @@ void Character::ClearUnusedUploadBuffersAfterInit()
 		m_vertexBufferUpload->Release();
 		m_vertexBufferUpload = nullptr;
 	}
+	if (m_CBV)
+	{
+		m_CBV->Unmap(0, nullptr);
+		m_cbvDataBegin = nullptr;
+		m_CBV->Release();
+		m_CBV = nullptr;
+	}
 }
 
 void Character::InitPipeline(Graphics* Renderer)
 {
-	CD3DX12_DESCRIPTOR_RANGE range[3];
-	CD3DX12_ROOT_PARAMETER paramsRoot[3];
+	CD3DX12_DESCRIPTOR_RANGE range[2];
+	CD3DX12_ROOT_PARAMETER paramsRoot[2];
 	// Root Signature 생성
+	// Slot 0 : BumpColor
 	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 	paramsRoot[0].InitAsDescriptorTable(1, &range[0]);
 
-	// ConstantBufferview를 위한 Root Parameter
+	// ConstantBuffer
 	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	paramsRoot[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_ALL);
 
-	// Slot3 : Color Map, Register(t1)
-	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
-	paramsRoot[2].InitAsDescriptorTable(1, &range[2]);
 
 	CD3DX12_STATIC_SAMPLER_DESC descSamplers[2];
 	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
@@ -160,9 +167,9 @@ void Character::InitPipeline(Graphics* Renderer)
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		//{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		//{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		//{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
 
 	D3D12_INPUT_LAYOUT_DESC	inputLayoutDesc = {};
@@ -190,19 +197,16 @@ void Character::InitPipeline(Graphics* Renderer)
 
 void Character::InitPipelineWireframe(Graphics* Renderer)
 {
-	CD3DX12_DESCRIPTOR_RANGE range[3];
-	CD3DX12_ROOT_PARAMETER paramsRoot[3];
+	CD3DX12_DESCRIPTOR_RANGE range[2];
+	CD3DX12_ROOT_PARAMETER paramsRoot[2];
 	// Root Signature 생성
+	// Slot 0 : BumpColor
 	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
 	paramsRoot[0].InitAsDescriptorTable(1, &range[0]);
 
-	// ConstantBufferview를 위한 Root Parameter
+	// ConstantBuffer
 	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	paramsRoot[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_ALL);
-
-	// Slot3 : Color Map, Register(t1)
-	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
-	paramsRoot[2].InitAsDescriptorTable(1, &range[2]);
 
 	CD3DX12_STATIC_SAMPLER_DESC descSamplers[2];
 	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
@@ -233,9 +237,9 @@ void Character::InitPipelineWireframe(Graphics* Renderer)
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		//{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		//{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		//{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
 
 	D3D12_INPUT_LAYOUT_DESC	inputLayoutDesc = {};
@@ -265,12 +269,41 @@ void Character::CreateDescriptorHeap(Graphics* Renderer)
 {
 	// SRV Discriptor Heap 생성
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = 3;
+	srvHeapDesc.NumDescriptors = 2;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	Renderer->CreateDescriptorHeap(&srvHeapDesc, m_srvHeap);
 
 	m_srvDescSize = Renderer->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+	// BumpColor 생성
+	std::unique_ptr<uint8_t[]> BumpColordecodeData;
+	ID3D12Resource* BumpColor;
+	D3D12_SUBRESOURCE_DATA BumpColorMapData;
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC	srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = 1;
+
+	LoadWICTextureFromFileEx(Renderer->GetDevice().Get(), L"models/Wolf/textures/Wolf_Body.jpg", 0, D3D12_RESOURCE_FLAG_NONE, WIC_LOADER_FORCE_RGBA32, &BumpColor, BumpColordecodeData, BumpColorMapData);
+
+	const UINT64 BumpColorSize = GetRequiredIntermediateSize(BumpColor, 0, 1);
+
+	Renderer->GetDevice()->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(BumpColorSize),
+		D3D12_RESOURCE_STATE_GENERIC_READ,
+		nullptr,
+		IID_PPV_ARGS(&m_uploadHeap));
+
+	UpdateSubresources(Renderer->GetCommandList().Get(), BumpColor, m_uploadHeap, 0, 0, 1, &BumpColorMapData);
+
+	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BumpColor, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+	CD3DX12_CPU_DESCRIPTOR_HANDLE handleSRV(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_srvDescSize); // SRV Heap의 첫번째 항목
+	Renderer->CreateSRV(BumpColor, &srvDesc, handleSRV);
 }
 
 void Character::CreateConstantBuffer(Graphics* Renderer)
