@@ -42,6 +42,8 @@ struct Vertex
 	XMFLOAT3 Normal;
 	XMFLOAT3 TangentU;
 	XMFLOAT2 TexC;
+	XMFLOAT4 BoneWeights;
+	XMFLOAT4 BoneIndices;
 };
 
 struct FbxMaterialInfo
@@ -116,4 +118,10 @@ struct FbxAnimClipInfo
 	FbxTime			endTime;
 	FbxTime::EMode	mode;
 	vector<vector<FbxKeyFrameInfo>>	keyFrames;
+};
+
+struct FbxMeshData {
+	std::string MeshName = "";
+	UINT VertexSize = 0;
+	UINT IndexSize = 0;
 };

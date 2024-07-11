@@ -1,13 +1,28 @@
-struct VS_OUTPUT {
-	float4 pos : SV_POSITION;
-	float2 tex : TEXCOORD;
+struct VS_INPUT
+{
+	float3 pos : POSITION;
 };
 
-VS_OUTPUT VS2D(uint input : SV_VERTEXID) {
+struct VS_OUTPUT {
+	float4 pos : SV_POSITION;
+};
+
+cbuffer ConstantBuffer : register(b0)
+{
+    float4x4 world;
+    float4x4 viewproj;
+    float4 eye;
+    int height;
+    int width;
+}
+
+VS_OUTPUT VS2D(VS_INPUT input) {
 	VS_OUTPUT output;
 
-	output.pos = float4(float2((input << 1) & 2, input == 0) * float2(2.0f, -4.0f) + float2(-1.0f, 1.0f), 0.0f, 1.0f);
-	output.tex = float2((output.pos.x + 1) / 2, (output.pos.y + 1) / 2);
+	// 월드 변환 적용
+    float4 worldPos = mul(world, float4(input.pos, 1.0f));
+    // 뷰-프로젝션 변환 적용
+    output.pos = mul(worldPos, viewproj);
 
 	return output;
 }

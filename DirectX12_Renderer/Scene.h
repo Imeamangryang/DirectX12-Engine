@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "Sky.h"
 #include "Moon.h"
+#include "Character.h"
 
 using namespace graphics;
 
@@ -48,4 +49,5 @@ private:
 	Terrain m_terrain;
 	Sky m_sky;
 	Moon m_moon;
+	Character m_character;
 };

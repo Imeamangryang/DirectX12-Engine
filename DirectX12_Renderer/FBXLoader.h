@@ -1,6 +1,8 @@
 #pragma once
 #include "stdafx.h"
-
+#include "Structures.h"
+#include <filesystem>
+#include <string> 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace std;
@@ -29,11 +31,8 @@ private:
 	void		GetNormal(FbxMesh* mesh, FbxMeshInfo* container, UINT idx, UINT vertexCounter);
 	void		GetTangent(FbxMesh* mesh, FbxMeshInfo* container, UINT idx, UINT vertexCounter);
 	void		GetUV(FbxMesh* mesh, FbxMeshInfo* container, UINT idx, UINT vertexCounter);
-	Vec4		GetMaterialData(FbxSurfaceMaterial* surface, const char* materialName, const char* factorName);
+	XMFLOAT4	GetMaterialData(FbxSurfaceMaterial* surface, const char* materialName, const char* factorName);
 	wstring		GetTextureRelativeName(FbxSurfaceMaterial* surface, const char* materialProperty);
-
-	void CreateTextures();
-	void CreateMaterials();
 
 	// Animation
 	void LoadBones(FbxNode* node) { LoadBones(node, 0, -1); }

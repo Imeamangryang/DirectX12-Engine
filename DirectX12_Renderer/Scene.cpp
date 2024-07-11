@@ -5,7 +5,8 @@ Scene::Scene(int height, int width, Graphics* renderer) :
 	m_sky(renderer),
 	m_moon(renderer),
 	m_renderer(renderer),
-	m_camera(height, width)
+	m_camera(height, width),
+	m_character(renderer)
 {
 	m_viewport.TopLeftX = 0;
 	m_viewport.TopLeftY = 0;
@@ -27,6 +28,7 @@ Scene::Scene(int height, int width, Graphics* renderer) :
 	m_terrain.ClearUnusedUploadBuffersAfterInit();
 	m_sky.ClearUnusedUploadBuffersAfterInit();
 	m_moon.ClearUnusedUploadBuffersAfterInit();
+	m_character.ClearUnusedUploadBuffersAfterInit();
 }
 
 Scene::~Scene()
@@ -41,6 +43,7 @@ Scene::~Scene()
 
 void Scene::Draw()
 {
+	// ImGui Render
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
@@ -105,28 +108,50 @@ void Scene::Draw()
 
 				ImGui::TreePop();
 			}
+			if (ImGui::TreeNode(m_character.m_objectname.c_str())) {
+				ImGui::Text("Translation");
+				ImGui::DragFloat("Translation X", &m_character.m_translation_x, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Translation Y", &m_character.m_translation_y, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Translation Z", &m_character.m_translation_z, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::Text("Rotation");
+				ImGui::DragFloat("Rotation X", &m_character.m_rotation_x, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Rotation Y", &m_character.m_rotation_y, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Rotation Z", &m_character.m_rotation_z, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::Text("Scaling");
+				ImGui::DragFloat("Scale X", &m_character.m_scale_x, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Scale Y", &m_character.m_scale_y, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Scale Z", &m_character.m_scale_z, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+
+				ImGui::BulletText("Vertex Count : %d", m_character.m_vertexcount);
+				ImGui::SameLine();
+				ImGui::BulletText("Index Count : %d", m_character.m_indexcount);
+
+				ImGui::TreePop();
+			}
 		}
 		ImGui::End();
 	}
 
+	// DirectX Render
 	m_renderer->ResetPipeline();
 
-	const float clearColor[] = { 0.1f, 0.1f, 0.1f, 1.0f };
-	m_renderer->SetBackBufferRender(m_renderer->GetCommandList(), clearColor);
+	m_renderer->SetBackBufferRender(m_renderer->GetCommandList(), DirectX::Colors::DarkBlue);
 
 	SetViewport();
 
 	if (m_DrawMode == 1)
 	{
-		m_terrain.DrawTes(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
-		m_sky.Draw3D(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		//m_terrain.DrawTes(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		//m_sky.Draw3D(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 		m_moon.DrawTes(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		m_character.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 	}
 	else
 	{
-		m_terrain.DrawTes_Wireframe(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
-		m_sky.Draw3D(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		//m_terrain.DrawTes_Wireframe(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		//m_sky.Draw3D(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 		m_moon.DrawTes_Wireframe(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		m_character.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 	}
 
 	ImGui::Render();

@@ -24,9 +24,9 @@ Terrain::Terrain(Graphics* renderer) : Object(renderer),
 
 	CreateGeosphere(renderer, 2000, 10);
 
-	XMStoreFloat4x4(&m_worldTransform, XMMatrixTranslation(1.0f, 1.0f, 1.0f));
-
 	m_objectname = "Earth";
+
+	m_translation_x = 3000.0f;
 }
 
 Terrain::~Terrain()
