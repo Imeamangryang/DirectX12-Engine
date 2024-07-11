@@ -19,6 +19,8 @@ public:
 
 	void ClearUnusedUploadBuffersAfterInit();
 
+	void SetIsWireframe(bool isWireframe) { this->isWireframe = isWireframe; }
+
 private:
 	void InitPipeline(Graphics* Renderer);
 	void InitPipelineWireframe(Graphics* Renderer);
@@ -26,8 +28,6 @@ private:
 	void CreateDescriptorHeap(Graphics* Renderer);
 
 	void CreateConstantBuffer(Graphics* Renderer);
-
-	void LoadCharacter(Graphics* Renderer, const wchar_t* path);
 
 	void LoadFBXModel(Graphics* Renderer, string path);
 
@@ -37,10 +37,10 @@ private:
 	UINT m_width;
 	UINT m_height;
 
+	bool isWireframe = false;
 	ComPtr<ID3D12PipelineState> m_pipelineState;
 	ComPtr<ID3D12PipelineState> m_pipelineStateWireframe;
 	ComPtr<ID3D12RootSignature> m_rootSignature;
-	ComPtr<ID3D12RootSignature> m_rootSignatureWireframe;
 	ID3D12Resource* m_CBV;
 	ConstantBuffer m_constantBufferData;
 	UINT8* m_cbvDataBegin;

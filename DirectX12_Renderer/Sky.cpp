@@ -64,7 +64,7 @@ Sky::~Sky()
 	}
 }
 
-void Sky::Draw3D(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye)
+void Sky::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye)
 {
     m_commandList->SetPipelineState(m_pipelineState3D.Get());
     m_commandList->SetGraphicsRootSignature(m_rootSignature3D.Get());

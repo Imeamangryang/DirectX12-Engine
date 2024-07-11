@@ -4,7 +4,6 @@ Terrain::Terrain(Graphics* renderer) : Object(renderer),
 	m_pipelineStateTes(nullptr),
 	m_pipelineStateTes2(nullptr),
 	m_rootSignatureTes(nullptr),
-	m_rootSignatureTes2(nullptr),
 	m_srvHeap(nullptr),
 	m_uploadHeap(nullptr),
 	m_width(0),
@@ -70,51 +69,15 @@ Terrain::~Terrain()
 	}
 }
 
-void Terrain::DrawTes(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye)
+void Terrain::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye)
 {
-	m_commandList->SetPipelineState(m_pipelineStateTes.Get());
+	if (isWireframe == false) {
+		m_commandList->SetPipelineState(m_pipelineStateTes.Get());
+	}
+	else {
+		m_commandList->SetPipelineState(m_pipelineStateTes2.Get());
+	}
 	m_commandList->SetGraphicsRootSignature(m_rootSignatureTes.Get());
-
-	m_orbitCycle.Update();
-
-	// Transform
-	XMStoreFloat4x4(&m_worldTransform,
-		XMMatrixTransformation(
-			XMVectorZero(),
-			XMVectorZero(),
-			XMVectorSet(m_scale_x, m_scale_y, m_scale_z, 0.0f),
-			XMVectorZero(),
-			XMQuaternionRotationRollPitchYaw(XMConvertToRadians(m_rotation_x), XMConvertToRadians(m_rotation_y), XMConvertToRadians(m_rotation_z)),
-			XMVectorSet(m_translation_x, m_translation_y, m_translation_z, 0.0)
-		));
-
-	m_constantBufferData.world = m_worldTransform;
-	m_constantBufferData.viewproj = viewproj;
-	m_constantBufferData.eye = eye;
-	m_constantBufferData.height = m_height;
-	m_constantBufferData.width = m_width;
-	m_constantBufferData.light = m_orbitCycle.GetLight();
-	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
-
-	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get()};
-	m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
-	m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
-	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_srvDescSize);
-	m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
-	CD3DX12_GPU_DESCRIPTOR_HANDLE srvhandle2(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_srvDescSize);
-	m_commandList->SetGraphicsRootDescriptorTable(2, srvhandle2);
-
-	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST); // describe how to read the vertex buffer.
-	m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-	m_commandList->IASetIndexBuffer(&m_indexBufferView);
-
-	m_commandList->DrawIndexedInstanced(m_indexcount, 1, 0, 0, 0);
-}
-
-void Terrain::DrawTes_Wireframe(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye)
-{
-	m_commandList->SetPipelineState(m_pipelineStateTes2.Get());
-	m_commandList->SetGraphicsRootSignature(m_rootSignatureTes2.Get());
 
 	m_orbitCycle.Update();
 
@@ -281,7 +244,7 @@ void Terrain::InitPipelineTes_Wireframe(Graphics* Renderer)
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
-	Renderer->createRootSignature(&rootDesc, m_rootSignatureTes2);
+	Renderer->createRootSignature(&rootDesc, m_rootSignatureTes);
 
 	CreateConstantBuffer(Renderer);
 
@@ -310,7 +273,7 @@ void Terrain::InitPipelineTes_Wireframe(Graphics* Renderer)
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	psoDesc.InputLayout = inputLayoutDesc;
-	psoDesc.pRootSignature = m_rootSignatureTes2.Get();
+	psoDesc.pRootSignature = m_rootSignatureTes.Get();
 	psoDesc.VS = VSBytecode;
 	psoDesc.PS = PSBytecode;
 	psoDesc.HS = HSBytecode;

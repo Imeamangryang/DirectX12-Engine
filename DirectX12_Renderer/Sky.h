@@ -13,7 +13,7 @@ public:
 	Sky(Graphics* renderer);
 	~Sky();
 
-	void Draw3D(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye);
+	void Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye);
 
 	void ClearUnusedUploadBuffersAfterInit();
 

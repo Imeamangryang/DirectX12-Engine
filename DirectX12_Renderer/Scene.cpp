@@ -139,18 +139,25 @@ void Scene::Draw()
 
 	SetViewport();
 
+	// WireFrame Draw Setting
 	if (m_DrawMode == 1)
 	{
-		//m_terrain.DrawTes(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
-		//m_sky.Draw3D(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
-		m_moon.DrawTes(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
-		m_character.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		m_terrain.SetIsWireframe(false);
+		m_moon.SetIsWireframe(false);
+		m_character.SetIsWireframe(false);
 	}
 	else
 	{
-		//m_terrain.DrawTes_Wireframe(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
-		//m_sky.Draw3D(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
-		m_moon.DrawTes_Wireframe(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		m_terrain.SetIsWireframe(true);
+		m_terrain.SetIsWireframe(true);
+		m_character.SetIsWireframe(true);
+	}
+
+	// Object Draw
+	{
+		m_sky.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		m_terrain.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		m_moon.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 		m_character.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 	}
 

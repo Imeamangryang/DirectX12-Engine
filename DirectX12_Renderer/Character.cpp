@@ -8,7 +8,6 @@ Character::Character(Graphics* renderer) : Object(renderer),
 	m_pipelineState(nullptr),
 	m_pipelineStateWireframe(nullptr),
 	m_rootSignature(nullptr),
-	m_rootSignatureWireframe(nullptr),
 	m_CBV(nullptr),
 	m_cbvDataBegin(nullptr),
 	m_srvDescSize(0),
@@ -25,11 +24,11 @@ Character::Character(Graphics* renderer) : Object(renderer),
 	InitPipeline(renderer);;
 	InitPipelineWireframe(renderer);
 
-	//LoadCharacter(renderer, L"models/Remy.fbx");
-	LoadFBXModel(renderer, "models/Remy.fbx");
+	LoadFBXModel(renderer, "models/SK_Fox.fbx");
 
 	m_objectname = "Character";
 
+	m_rotation_x = 90.0f;
 }
 
 Character::~Character()
@@ -52,7 +51,12 @@ Character::~Character()
 
 void Character::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye)
 {
-	m_commandList->SetPipelineState(m_pipelineState.Get());
+	if (isWireframe == false) {
+		m_commandList->SetPipelineState(m_pipelineState.Get());
+	}
+	else {
+		m_commandList->SetPipelineState(m_pipelineStateWireframe.Get());
+	}
 	m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 
 	// Transform
@@ -90,10 +94,6 @@ void Character::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4
 		// Draw
 		m_commandList->DrawIndexedInstanced(mesh.IndexSize, 1, mesh.StartIndexLocation, mesh.BaseVertexLocation, 0);
 	}
-}
-
-void Character::DrawWireframe(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye)
-{
 }
 
 void Character::ClearUnusedUploadBuffersAfterInit()
@@ -190,6 +190,75 @@ void Character::InitPipeline(Graphics* Renderer)
 
 void Character::InitPipelineWireframe(Graphics* Renderer)
 {
+	CD3DX12_DESCRIPTOR_RANGE range[3];
+	CD3DX12_ROOT_PARAMETER paramsRoot[3];
+	// Root Signature 생성
+	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	paramsRoot[0].InitAsDescriptorTable(1, &range[0]);
+
+	// ConstantBufferview를 위한 Root Parameter
+	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	paramsRoot[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_ALL);
+
+	// Slot3 : Color Map, Register(t1)
+	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
+	paramsRoot[2].InitAsDescriptorTable(1, &range[2]);
+
+	CD3DX12_STATIC_SAMPLER_DESC descSamplers[2];
+	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+	descSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+	descSamplers[1].Init(1, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+	descSamplers[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+	CD3DX12_ROOT_SIGNATURE_DESC rootDesc;
+	rootDesc.Init(
+		_countof(paramsRoot),
+		paramsRoot,
+		2,
+		descSamplers,
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+	Renderer->createRootSignature(&rootDesc, m_rootSignature);
+
+	CreateConstantBuffer(Renderer);
+
+	// Shader Compile
+	D3D12_SHADER_BYTECODE PSBytecode = {};
+	D3D12_SHADER_BYTECODE VSBytecode = {};
+	Renderer->CompileShader(L"VertexShader2D.hlsl", "VS2D", VSBytecode, VERTEX_SHADER);
+	Renderer->CompileShader(L"PixelShader2D.hlsl", "PS2D", PSBytecode, PIXEL_SHADER);
+
+	// Input Layout 생성
+	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		//{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		//{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		//{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+
+	D3D12_INPUT_LAYOUT_DESC	inputLayoutDesc = {};
+	inputLayoutDesc.NumElements = sizeof(inputLayout) / sizeof(D3D12_INPUT_ELEMENT_DESC);
+	inputLayoutDesc.pInputElementDescs = inputLayout;
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+	psoDesc.pRootSignature = m_rootSignature.Get();
+	psoDesc.InputLayout = inputLayoutDesc;
+	psoDesc.VS = VSBytecode;
+	psoDesc.PS = PSBytecode;
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.SampleMask = UINT_MAX;
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	psoDesc.SampleDesc.Count = 1;
+
+	Renderer->createPSO(&psoDesc, m_pipelineStateWireframe);
 }
 
 void Character::CreateDescriptorHeap(Graphics* Renderer)
@@ -228,108 +297,6 @@ void Character::CreateConstantBuffer(Graphics* Renderer)
 	}
 }
 
-void Character::LoadCharacter(Graphics* Renderer, const wchar_t* path)
-{
-	FbxManager* mfbxManager = FbxManager::Create();
-	FbxIOSettings* ios = FbxIOSettings::Create(mfbxManager, IOSROOT);
-	mfbxManager->SetIOSettings(ios);
-	FbxImporter* mfbxImporter = FbxImporter::Create(mfbxManager, "");
-	FbxScene* mfbxScene = FbxScene::Create(mfbxManager, "");
-
-	mfbxImporter->Initialize("models/Remy.fbx", -1, mfbxManager->GetIOSettings());
-	mfbxImporter->Import(mfbxScene);
-
-	mfbxScene->GetGlobalSettings().SetAxisSystem(FbxAxisSystem::DirectX);
-
-	FbxGeometryConverter geometryConverter(mfbxManager);
-	geometryConverter.Triangulate(mfbxScene, true);
-
-	mfbxImporter->Destroy();
-
-	FbxNode* lRootNode = mfbxScene->GetRootNode();
-
-	std::vector<Vertex> vertices;
-	std::vector<UINT> indices;
-
-	for (int k = 0; k < lRootNode->GetChildCount(); k++) {
-		FbxMeshData meshdata;
-
-		FbxNode* mNode = lRootNode->GetChild(k);
-
-		FbxNodeAttribute* attribute = mNode->GetNodeAttribute();
-
-		if (attribute->GetAttributeType() == FbxNodeAttribute::eMesh) {
-			FbxMesh* mesh = mNode->GetMesh();
-			int vertexcount = mesh->GetControlPointsCount();
-
-			FbxVector4* controlPoints = mesh->GetControlPoints();
-			for (int i = 0; i < vertexcount; ++i) {
-				Vertex tempvertex;
-				tempvertex.Position.x = static_cast<float>(controlPoints[i].mData[0]);
-				tempvertex.Position.y = static_cast<float>(controlPoints[i].mData[2]);
-				tempvertex.Position.z = static_cast<float>(controlPoints[i].mData[1]);
-
-				vertices.push_back(tempvertex);
-			}
-
-			UINT arrIdx[3];
-			int polygonCount = mesh->GetPolygonCount();
-
-			for (int i = 0; i < polygonCount; i++) // 삼각형의 개수
-			{
-				for (int j = 0; j < 3; j++) // 삼각형은 세 개의 정점으로 구성
-				{
-					UINT controlPointIndex = mesh->GetPolygonVertex(i, j); // 제어점의 인덱스 추출
-					arrIdx[j] = controlPointIndex;
-				}
-
-				indices.push_back(arrIdx[0]);
-				indices.push_back(arrIdx[2]);
-				indices.push_back(arrIdx[1]);
-			}
-
-			meshdata.VertexSize = vertexcount;
-			meshdata.IndexSize = polygonCount * 3;
-
-			meshes.push_back(meshdata);
-		}
-	}
-
-	m_vertexcount = vertices.size();
-	m_indexcount = indices.size();
-
-	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
-	const UINT ibByteSize = (UINT)indices.size() * sizeof(UINT);
-
-	Renderer->CreateCommittedBuffer(m_vertexBuffer, m_vertexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(vbByteSize));
-
-	D3D12_SUBRESOURCE_DATA vertexData = {};
-	vertexData.pData = &vertices[0];
-	vertexData.RowPitch = vbByteSize;
-	vertexData.SlicePitch = vbByteSize;
-
-	UpdateSubresources(Renderer->GetCommandList().Get(), m_vertexBuffer, m_vertexBufferUpload, 0, 0, 1, &vertexData);
-	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
-
-	m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
-	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
-	m_vertexBufferView.SizeInBytes = vbByteSize;
-
-	Renderer->CreateCommittedBuffer(m_indexBuffer, m_indexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(ibByteSize));
-
-	D3D12_SUBRESOURCE_DATA indexData = {};
-	indexData.pData = &indices[0];
-	indexData.RowPitch = ibByteSize;
-	indexData.SlicePitch = ibByteSize;
-
-	UpdateSubresources(Renderer->GetCommandList().Get(), m_indexBuffer, m_indexBufferUpload, 0, 0, 1, &indexData);
-	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_indexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
-
-	m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
-	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	m_indexBufferView.SizeInBytes = ibByteSize;
-}
-
 void Character::LoadFBXModel(Graphics* Renderer, string path)
 {
 	FBXLoader loader;
@@ -337,9 +304,6 @@ void Character::LoadFBXModel(Graphics* Renderer, string path)
 
 	std::vector<Vertex> vertices;
 	std::vector<std::uint32_t> indices;
-
-	UINT StartIndexLocation = 0;
-	UINT BaseVertexLocation = 0;
 
 	m_vertexcount = 0;
 	m_indexcount = 0;
@@ -352,17 +316,14 @@ void Character::LoadFBXModel(Graphics* Renderer, string path)
 		meshdata.MeshName = meshInfo.name;
 		meshdata.VertexSize = meshInfo.vertices.size();
 		meshdata.IndexSize = meshInfo.indices.size();
-		meshdata.StartIndexLocation = StartIndexLocation;
-		meshdata.BaseVertexLocation = BaseVertexLocation;
+		meshdata.StartIndexLocation = m_indexcount;
+		meshdata.BaseVertexLocation = m_vertexcount;
 		
 		vertices.insert(vertices.end(), meshInfo.vertices.begin(), meshInfo.vertices.end());
 		indices.insert(indices.end(), meshInfo.indices.begin(), meshInfo.indices.end());
 
 		m_vertexcount += meshInfo.vertices.size();
 		m_indexcount += meshInfo.indices.size();
-
-		BaseVertexLocation += meshdata.VertexSize;
-		StartIndexLocation += meshdata.IndexSize;
 
 		meshes.push_back(meshdata);
 	}
