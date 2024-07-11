@@ -1,8 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include "Structures.h"
-#include <filesystem>
-#include <string> 
+
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace std;
@@ -14,7 +13,7 @@ public:
 	~FBXLoader();
 
 public:
-	void LoadFbx(const wstring& path);
+	void LoadFbx(const string& path);
 
 public:
 	UINT GetMeshCount() { return static_cast<UINT>(_meshes.size()); }
@@ -22,7 +21,7 @@ public:
 	vector<shared_ptr<FbxBoneInfo>>& GetBones() { return _bones; }
 	vector<shared_ptr<FbxAnimClipInfo>>& GetAnimClip() { return _animClips; }
 private:
-	void Import(const wstring& path);
+	void Import(const string path);
 
 	void ParseNode(FbxNode* root);
 	void LoadMesh(FbxMesh* mesh);
@@ -32,7 +31,7 @@ private:
 	void		GetTangent(FbxMesh* mesh, FbxMeshInfo* container, UINT idx, UINT vertexCounter);
 	void		GetUV(FbxMesh* mesh, FbxMeshInfo* container, UINT idx, UINT vertexCounter);
 	XMFLOAT4	GetMaterialData(FbxSurfaceMaterial* surface, const char* materialName, const char* factorName);
-	wstring		GetTextureRelativeName(FbxSurfaceMaterial* surface, const char* materialProperty);
+	string		GetTextureRelativeName(FbxSurfaceMaterial* surface, const char* materialProperty);
 
 	// Animation
 	void LoadBones(FbxNode* node) { LoadBones(node, 0, -1); }

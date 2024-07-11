@@ -42,8 +42,6 @@ struct Vertex
 	XMFLOAT3 Normal;
 	XMFLOAT3 TangentU;
 	XMFLOAT2 TexC;
-	XMFLOAT4 BoneWeights;
-	XMFLOAT4 BoneIndices;
 };
 
 struct FbxMaterialInfo
@@ -51,10 +49,10 @@ struct FbxMaterialInfo
 	XMFLOAT4		diffuse;
 	XMFLOAT4		ambient;
 	XMFLOAT4		specular;
-	wstring			name;
-	wstring			diffuseTexName;
-	wstring			normalTexName;
-	wstring			specularTexName;
+	string			name;
+	string			diffuseTexName;
+	string			normalTexName;
+	string			specularTexName;
 };
 
 struct BoneWeight
@@ -90,9 +88,9 @@ struct BoneWeight
 
 struct FbxMeshInfo
 {
-	wstring								name;
+	std::string							name;
 	vector<Vertex>						vertices;
-	vector<vector<UINT>>				indices;
+	vector<std::uint32_t>				indices;
 	vector<FbxMaterialInfo>				materials;
 	vector<BoneWeight>					boneWeights; // »À °¡ÁßÄ¡
 	bool								hasAnimation;
@@ -106,14 +104,14 @@ struct FbxKeyFrameInfo
 
 struct FbxBoneInfo
 {
-	wstring					boneName;
+	string					boneName;
 	UINT					parentIndex;
 	FbxAMatrix				matOffset;
 };
 
 struct FbxAnimClipInfo
 {
-	wstring			name;
+	string			name;
 	FbxTime			startTime;
 	FbxTime			endTime;
 	FbxTime::EMode	mode;
@@ -124,4 +122,6 @@ struct FbxMeshData {
 	std::string MeshName = "";
 	UINT VertexSize = 0;
 	UINT IndexSize = 0;
+	UINT StartIndexLocation = 0;
+	UINT BaseVertexLocation = 0;
 };

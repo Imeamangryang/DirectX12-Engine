@@ -25,7 +25,8 @@ Character::Character(Graphics* renderer) : Object(renderer),
 	InitPipeline(renderer);;
 	InitPipelineWireframe(renderer);
 
-	LoadCharacter(renderer, L"models/Remy.fbx");
+	//LoadCharacter(renderer, L"models/Remy.fbx");
+	LoadFBXModel(renderer, "models/Remy.fbx");
 
 	m_objectname = "Character";
 
@@ -87,7 +88,7 @@ void Character::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4
 	for(const auto& mesh : meshes)
 	{
 		// Draw
-		m_commandList->DrawIndexedInstanced(mesh.IndexSize, 1, mesh.IndexSize, mesh.VertexSize, 0);
+		m_commandList->DrawIndexedInstanced(mesh.IndexSize, 1, mesh.StartIndexLocation, mesh.BaseVertexLocation, 0);
 	}
 }
 
@@ -287,7 +288,6 @@ void Character::LoadCharacter(Graphics* Renderer, const wchar_t* path)
 				indices.push_back(arrIdx[1]);
 			}
 
-			meshdata.MeshName = mesh->GetName();
 			meshdata.VertexSize = vertexcount;
 			meshdata.IndexSize = polygonCount * 3;
 
@@ -300,6 +300,75 @@ void Character::LoadCharacter(Graphics* Renderer, const wchar_t* path)
 
 	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
 	const UINT ibByteSize = (UINT)indices.size() * sizeof(UINT);
+
+	Renderer->CreateCommittedBuffer(m_vertexBuffer, m_vertexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(vbByteSize));
+
+	D3D12_SUBRESOURCE_DATA vertexData = {};
+	vertexData.pData = &vertices[0];
+	vertexData.RowPitch = vbByteSize;
+	vertexData.SlicePitch = vbByteSize;
+
+	UpdateSubresources(Renderer->GetCommandList().Get(), m_vertexBuffer, m_vertexBufferUpload, 0, 0, 1, &vertexData);
+	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+
+	m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
+	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
+	m_vertexBufferView.SizeInBytes = vbByteSize;
+
+	Renderer->CreateCommittedBuffer(m_indexBuffer, m_indexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(ibByteSize));
+
+	D3D12_SUBRESOURCE_DATA indexData = {};
+	indexData.pData = &indices[0];
+	indexData.RowPitch = ibByteSize;
+	indexData.SlicePitch = ibByteSize;
+
+	UpdateSubresources(Renderer->GetCommandList().Get(), m_indexBuffer, m_indexBufferUpload, 0, 0, 1, &indexData);
+	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_indexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
+
+	m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
+	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+	m_indexBufferView.SizeInBytes = ibByteSize;
+}
+
+void Character::LoadFBXModel(Graphics* Renderer, string path)
+{
+	FBXLoader loader;
+	loader.LoadFbx(path);
+
+	std::vector<Vertex> vertices;
+	std::vector<std::uint32_t> indices;
+
+	UINT StartIndexLocation = 0;
+	UINT BaseVertexLocation = 0;
+
+	m_vertexcount = 0;
+	m_indexcount = 0;
+
+	for (UINT i = 0; i < loader.GetMeshCount(); i++)
+	{
+		const FbxMeshInfo& meshInfo = loader.GetMesh(i);
+
+		FbxMeshData meshdata;
+		meshdata.MeshName = meshInfo.name;
+		meshdata.VertexSize = meshInfo.vertices.size();
+		meshdata.IndexSize = meshInfo.indices.size();
+		meshdata.StartIndexLocation = StartIndexLocation;
+		meshdata.BaseVertexLocation = BaseVertexLocation;
+		
+		vertices.insert(vertices.end(), meshInfo.vertices.begin(), meshInfo.vertices.end());
+		indices.insert(indices.end(), meshInfo.indices.begin(), meshInfo.indices.end());
+
+		m_vertexcount += meshInfo.vertices.size();
+		m_indexcount += meshInfo.indices.size();
+
+		BaseVertexLocation += meshdata.VertexSize;
+		StartIndexLocation += meshdata.IndexSize;
+
+		meshes.push_back(meshdata);
+	}
+
+	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
+	const std::uint32_t ibByteSize = (UINT)indices.size() * sizeof(std::uint32_t);
 
 	Renderer->CreateCommittedBuffer(m_vertexBuffer, m_vertexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(vbByteSize));
 

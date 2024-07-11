@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "Structures.h"
 #include "Object.h"
+#include "FBXLoader.h"
 
 using namespace graphics;
 
@@ -27,6 +28,8 @@ private:
 	void CreateConstantBuffer(Graphics* Renderer);
 
 	void LoadCharacter(Graphics* Renderer, const wchar_t* path);
+
+	void LoadFBXModel(Graphics* Renderer, string path);
 
 	ComPtr<ID3D12DescriptorHeap> m_srvHeap;
 	ID3D12Resource* m_uploadHeap;
