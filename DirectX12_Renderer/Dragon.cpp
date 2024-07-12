@@ -31,6 +31,10 @@ m_worldTransform(MathHelper::Identity4x4())
 	m_rotation_x = 90.0f;
 
 	m_translation_x = 200.0f;
+
+	m_scale_x = 3.0f;
+	m_scale_y = 3.0f;
+	m_scale_z = 3.0f;
 }
 
 Dragon::~Dragon()

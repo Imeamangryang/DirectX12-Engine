@@ -30,7 +30,7 @@ Scene::Scene(int height, int width, Graphics* renderer) :
 	m_terrain.ClearUnusedUploadBuffersAfterInit();
 	m_sky.ClearUnusedUploadBuffersAfterInit();
 	m_moon.ClearUnusedUploadBuffersAfterInit();
-	//m_character.ClearUnusedUploadBuffersAfterInit();
+	m_character.ClearUnusedUploadBuffersAfterInit();
 	m_dragon.ClearUnusedUploadBuffersAfterInit();
 	m_cube.ClearUnusedUploadBuffersAfterInit();
 }

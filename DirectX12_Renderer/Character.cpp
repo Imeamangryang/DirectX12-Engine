@@ -115,13 +115,6 @@ void Character::ClearUnusedUploadBuffersAfterInit()
 		m_vertexBufferUpload->Release();
 		m_vertexBufferUpload = nullptr;
 	}
-	if (m_CBV)
-	{
-		m_CBV->Unmap(0, nullptr);
-		m_cbvDataBegin = nullptr;
-		m_CBV->Release();
-		m_CBV = nullptr;
-	}
 }
 
 void Character::InitPipeline(Graphics* Renderer)

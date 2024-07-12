@@ -36,13 +36,13 @@ Window::Window(LPCWSTR appName, int height, int width, WNDPROC WndProc, bool isF
 	int posX, posY, h, w;
 
 	// Determine the resolution of the clients desktop screen.
-	//h = GetSystemMetrics(SM_CYSCREEN);
-	//w = GetSystemMetrics(SM_CXSCREEN);
+	h = GetSystemMetrics(SM_CYSCREEN);
+	w = GetSystemMetrics(SM_CXSCREEN);
 
-	RECT R = { 0, 0, width, height };
-	AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
-	h = R.right - R.left;
-	w = R.bottom - R.top;
+	//RECT R = { 0, 0, width, height };
+	//AdjustWindowRect(&R, WS_OVERLAPPEDWINDOW, false);
+	//h = R.right - R.left;
+	//w = R.bottom - R.top;
 
 	if (mFullscreen) {
 		// If full screen set, the screen to maximum size of the users desktop and 32bit.
