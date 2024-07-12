@@ -1,23 +1,23 @@
 #include "Character.h"
 
 Character::Character(Graphics* renderer) : Object(renderer),
-	m_srvHeap(nullptr),
-	m_uploadHeap(nullptr),
-	m_width(0),
-	m_height(0),
-	m_pipelineState(nullptr),
-	m_pipelineStateWireframe(nullptr),
-	m_rootSignature(nullptr),
-	m_CBV(nullptr),
-	m_cbvDataBegin(nullptr),
-	m_srvDescSize(0),
-	m_vertexBuffer(nullptr),
-	m_vertexBufferUpload(nullptr),
-	m_indexBuffer(nullptr),
-	m_indexBufferUpload(nullptr),
-	m_vertexBufferView(),
-	m_indexBufferView(),
-	m_worldTransform(MathHelper::Identity4x4())
+m_srvHeap(nullptr),
+m_uploadHeap(nullptr),
+m_width(0),
+m_height(0),
+m_pipelineState(nullptr),
+m_pipelineStateWireframe(nullptr),
+m_rootSignature(nullptr),
+m_CBV(nullptr),
+m_cbvDataBegin(nullptr),
+m_srvDescSize(0),
+m_vertexBuffer(nullptr),
+m_vertexBufferUpload(nullptr),
+m_indexBuffer(nullptr),
+m_indexBufferUpload(nullptr),
+m_vertexBufferView(),
+m_indexBufferView(),
+m_worldTransform(MathHelper::Identity4x4())
 {
 	CreateDescriptorHeap(renderer);
 
@@ -79,7 +79,7 @@ void Character::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4
 	m_constantBufferData.eye = eye;
 	m_constantBufferData.height = m_height;
 	m_constantBufferData.width = m_width;
-	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(SkyConstantBuffer));
+	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
 	m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
@@ -91,7 +91,7 @@ void Character::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4
 	m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 	m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
-	for(const auto& mesh : meshes)
+	for (const auto& mesh : meshes)
 	{
 		// Draw
 		m_commandList->DrawIndexedInstanced(mesh.IndexSize, 1, mesh.StartIndexLocation, mesh.BaseVertexLocation, 0);
@@ -308,7 +308,7 @@ void Character::CreateDescriptorHeap(Graphics* Renderer)
 
 void Character::CreateConstantBuffer(Graphics* Renderer)
 {
-	UINT64 bufferSize = sizeof(SkyConstantBuffer);
+	UINT64 bufferSize = sizeof(ConstantBuffer);
 	Renderer->CreateBuffer(m_CBV, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize));
 	m_CBV->SetName(L"CBV");
 
@@ -351,7 +351,7 @@ void Character::LoadFBXModel(Graphics* Renderer, string path)
 		meshdata.IndexSize = meshInfo.indices.size();
 		meshdata.StartIndexLocation = m_indexcount;
 		meshdata.BaseVertexLocation = m_vertexcount;
-		
+
 		vertices.insert(vertices.end(), meshInfo.vertices.begin(), meshInfo.vertices.end());
 		indices.insert(indices.end(), meshInfo.indices.begin(), meshInfo.indices.end());
 

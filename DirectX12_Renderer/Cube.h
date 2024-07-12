@@ -41,7 +41,7 @@ private:
 	ComPtr<ID3D12PipelineState> m_pipelineStateWireframe;
 	ComPtr<ID3D12RootSignature> m_rootSignature;
 	ID3D12Resource* m_CBV;
-	ConstantBuffer m_constantBufferData;
+	SkyConstantBuffer m_constantBufferData;
 	UINT8* m_cbvDataBegin;
 	UINT m_srvDescSize;
 
