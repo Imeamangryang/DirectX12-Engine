@@ -190,6 +190,7 @@ void Scene::Draw()
 		m_moon.SetIsWireframe(false);
 		m_character.SetIsWireframe(false);
 		m_dragon.SetIsWireframe(false);
+		m_cube.SetIsWireframe(false);
 	}
 	else
 	{
@@ -197,6 +198,7 @@ void Scene::Draw()
 		m_moon.SetIsWireframe(true);
 		m_character.SetIsWireframe(true);
 		m_dragon.SetIsWireframe(true);
+		m_cube.SetIsWireframe(true);
 	}
 
 	// Object Draw

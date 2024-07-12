@@ -17,6 +17,7 @@ m_worldTransform(MathHelper::Identity4x4())
 	CreateDescriptorHeap(renderer);
 
 	InitPipeline(renderer);
+	InitPipelineWireframe(renderer);
 
 	LoadMesh(renderer);
 
@@ -72,7 +73,12 @@ Cube::~Cube()
 
 void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye)
 {
-	m_commandList->SetPipelineState(m_pipelineState.Get());
+	if (isWireframe == false) {
+		m_commandList->SetPipelineState(m_pipelineState.Get());
+	}
+	else {
+		m_commandList->SetPipelineState(m_pipelineStateWireframe.Get());
+	}
 	m_commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 
 	// Transform
@@ -191,6 +197,74 @@ void Cube::InitPipeline(Graphics* Renderer)
 	psoDesc.SampleDesc.Count = 1;
 
 	Renderer->createPSO(&psoDesc, m_pipelineState);
+}
+
+void Cube::InitPipelineWireframe(Graphics* Renderer)
+{
+	// Root Signature 积己
+	CD3DX12_DESCRIPTOR_RANGE range[2];
+	CD3DX12_ROOT_PARAMETER paramsRoot[2];
+	// Slot : Displacement Map, Register(t0)
+	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 10, 0);
+	paramsRoot[0].InitAsDescriptorTable(1, &range[0], D3D12_SHADER_VISIBILITY_ALL);
+
+	// ConstantBufferview甫 困茄 Root Parameter
+	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	paramsRoot[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_ALL);
+
+	CD3DX12_STATIC_SAMPLER_DESC descSamplers[2];
+	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+	descSamplers[1].Init(1, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+
+	CD3DX12_ROOT_SIGNATURE_DESC rootDesc;
+	rootDesc.Init(
+		_countof(paramsRoot),
+		paramsRoot,
+		2,
+		descSamplers,
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+	Renderer->createRootSignature(&rootDesc, m_rootSignature);
+
+	CreateConstantBuffer(Renderer);
+
+	// Shader Compile
+	D3D12_SHADER_BYTECODE PSBytecode = {};
+	D3D12_SHADER_BYTECODE VSBytecode = {};
+	Renderer->CompileShader(L"VertexShader2D.hlsl", "VS2D", VSBytecode, VERTEX_SHADER);
+	Renderer->CompileShader(L"PixelShader2D.hlsl", "PS2D", PSBytecode, PIXEL_SHADER);
+
+	// Input Layout 积己
+	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+
+	D3D12_INPUT_LAYOUT_DESC	inputLayoutDesc = {};
+	inputLayoutDesc.NumElements = sizeof(inputLayout) / sizeof(D3D12_INPUT_ELEMENT_DESC);
+	inputLayoutDesc.pInputElementDescs = inputLayout;
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+	psoDesc.pRootSignature = m_rootSignature.Get();
+	psoDesc.InputLayout = inputLayoutDesc;
+	psoDesc.VS = VSBytecode;
+	psoDesc.PS = PSBytecode;
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.SampleMask = UINT_MAX;
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
+	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	psoDesc.SampleDesc.Count = 1;
+
+	Renderer->createPSO(&psoDesc, m_pipelineStateWireframe);
 }
 
 void Cube::CreateConstantBuffer(Graphics* Renderer)
