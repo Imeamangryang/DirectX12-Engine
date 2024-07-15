@@ -42,6 +42,8 @@ struct Vertex
 	XMFLOAT3 Normal;
 	XMFLOAT3 TangentU;
 	XMFLOAT2 TexC;
+	XMFLOAT4 BoneIndices;
+	XMFLOAT4 BoneWeights;
 };
 
 struct FbxMaterialInfo

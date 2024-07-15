@@ -1,11 +1,13 @@
 Texture2D<float4> colormap : register(t0);
+Texture2D<float4> normalmap : register(t1);
 SamplerState hmsampler : register(s0);
 SamplerState cmsampler : register(s1);
 
 struct DS_OUTPUT
 {
     float4 pos : SV_POSITION;
-    //float3 tan : TANGENT;
+    float3 norm : NORMAL;
+    float3 tan : TANGENT;
     float2 tex : TEXCOORD;
 };
 

@@ -1,14 +1,16 @@
 struct VS_OUTPUT
 {
     float4 pos : SV_POSITION;
-   // float3 tan : TANGENT;
+    float3 norm : NORMAL;
+    float3 tan : TANGENT;
     float2 tex : TEXCOORD;
 };
 
 struct HS_CONTROL_POINT_OUTPUT
 {
     float4 pos : SV_POSITION;
-    //float3 tan : TANGENT;
+    float3 norm : NORMAL;
+    float3 tan : TANGENT;
     float2 tex : TEXCOORD;
 };
 
@@ -47,7 +49,8 @@ HS_CONTROL_POINT_OUTPUT HS_DRAGON(
 	HS_CONTROL_POINT_OUTPUT Output;
 
 	Output.pos = ip[i].pos;
-	//Output.tan = ip[i].tan;
+	Output.norm = ip[i].norm;
+	Output.tan = ip[i].tan;
 	Output.tex = ip[i].tex;
 
 	return Output;

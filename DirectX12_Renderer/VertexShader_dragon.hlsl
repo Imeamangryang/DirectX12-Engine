@@ -9,7 +9,8 @@ struct VS_INPUT
 struct VS_OUTPUT
 {
     float4 pos : SV_POSITION;
-    //float3 tan : TANGENT;
+    float3 norm : NORMAL;
+    float3 tan : TANGENT;
     float2 tex : TEXCOORD;
 };
 
@@ -27,13 +28,15 @@ VS_OUTPUT VS_DRAGON(VS_INPUT input)
     VS_OUTPUT output;
 
 	//// 월드 변환 적용
- //   float4 worldPos = mul(world, float4(input.pos, 1.0f));
- //   // 뷰-프로젝션 변환 적용
- //   output.pos = mul(worldPos, viewproj);
+    //float4 worldPos = mul(world, float4(input.pos, 1.0f));
+    //// 뷰-프로젝션 변환 적용
+    //output.pos = mul(worldPos, viewproj);
     
     output.pos = float4(input.pos, 1.0f);
     
-    //output.tan = input.tan;
+    output.norm = input.norm;
+    
+    output.tan = input.tan;
     
     output.tex = input.tex;
 
