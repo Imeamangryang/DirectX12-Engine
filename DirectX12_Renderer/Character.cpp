@@ -28,6 +28,8 @@ m_worldTransform(MathHelper::Identity4x4())
 
 	m_objectname = "Character";
 
+	m_translation_x = -300.0f;
+
 	m_scale_x = 100.0f;
 	m_scale_y = 100.0f;
 	m_scale_z = 100.0f;

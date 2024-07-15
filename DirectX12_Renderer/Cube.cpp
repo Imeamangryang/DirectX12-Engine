@@ -25,8 +25,8 @@ m_worldTransform(MathHelper::Identity4x4())
 
 	m_translation_x = 100.0f;
 
-	m_scale_x = 3.0f;
-	m_scale_y = 3.0f;
+	m_scale_x = 10.0f;
+	m_scale_y = 10.0f;
 	m_scale_z = 0.0f;
 }
 

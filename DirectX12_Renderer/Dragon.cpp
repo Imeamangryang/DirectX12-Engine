@@ -32,9 +32,9 @@ m_worldTransform(MathHelper::Identity4x4())
 
 	m_translation_x = 200.0f;
 
-	m_scale_x = 3.0f;
-	m_scale_y = 3.0f;
-	m_scale_z = 3.0f;
+	m_scale_x = 10.0f;
+	m_scale_y = 10.0f;
+	m_scale_z = 10.0f;
 }
 
 Dragon::~Dragon()
@@ -88,8 +88,11 @@ void Dragon::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 vi
 	m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_srvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE srvhandle2(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_srvDescSize);
+	m_commandList->SetGraphicsRootDescriptorTable(2, srvhandle2);
 
-	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // describe how to read the vertex buffer.
+	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST); // describe how to read the vertex buffer.
+	//m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // describe how to read the vertex buffer.
 	m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 	m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
@@ -121,8 +124,8 @@ void Dragon::ClearUnusedUploadBuffersAfterInit()
 
 void Dragon::InitPipeline(Graphics* Renderer)
 {
-	CD3DX12_DESCRIPTOR_RANGE range[2];
-	CD3DX12_ROOT_PARAMETER paramsRoot[2];
+	CD3DX12_DESCRIPTOR_RANGE range[3];
+	CD3DX12_ROOT_PARAMETER paramsRoot[3];
 	// Root Signature 생성
 	// Slot 0 : BumpColor
 	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
@@ -132,6 +135,9 @@ void Dragon::InitPipeline(Graphics* Renderer)
 	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	paramsRoot[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_ALL);
 
+	// Slot 2 : Normal Map
+	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1); 
+	paramsRoot[2].InitAsDescriptorTable(1, &range[2]);
 
 	CD3DX12_STATIC_SAMPLER_DESC descSamplers[2];
 	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
@@ -155,8 +161,13 @@ void Dragon::InitPipeline(Graphics* Renderer)
 	// Shader Compile
 	D3D12_SHADER_BYTECODE PSBytecode = {};
 	D3D12_SHADER_BYTECODE VSBytecode = {};
-	Renderer->CompileShader(L"VertexShader2D.hlsl", "VS2D", VSBytecode, VERTEX_SHADER);
-	Renderer->CompileShader(L"PixelShader2D.hlsl", "PS2D", PSBytecode, PIXEL_SHADER);
+	D3D12_SHADER_BYTECODE HSBytecode = {};
+	D3D12_SHADER_BYTECODE DSBytecode = {};
+	Renderer->CompileShader(L"VertexShader_dragon.hlsl", "VS_DRAGON", VSBytecode, VERTEX_SHADER);
+	Renderer->CompileShader(L"PixelShader_dragon.hlsl", "PS_DRAGON", PSBytecode, PIXEL_SHADER);
+	Renderer->CompileShader(L"HullShader_dragon.hlsl", "HS_DRAGON", HSBytecode, HULL_SHADER);
+	Renderer->CompileShader(L"DomainShader_dragon.hlsl", "DS_DRAGON", DSBytecode, DOMAIN_SHADER);
+
 
 	// Input Layout 생성
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
@@ -176,13 +187,16 @@ void Dragon::InitPipeline(Graphics* Renderer)
 	psoDesc.InputLayout = inputLayoutDesc;
 	psoDesc.VS = VSBytecode;
 	psoDesc.PS = PSBytecode;
+	psoDesc.HS = HSBytecode;
+	psoDesc.DS = DSBytecode;
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+	//psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	psoDesc.SampleDesc.Count = 1;
@@ -192,8 +206,8 @@ void Dragon::InitPipeline(Graphics* Renderer)
 
 void Dragon::InitPipelineWireframe(Graphics* Renderer)
 {
-	CD3DX12_DESCRIPTOR_RANGE range[2];
-	CD3DX12_ROOT_PARAMETER paramsRoot[2];
+	CD3DX12_DESCRIPTOR_RANGE range[3];
+	CD3DX12_ROOT_PARAMETER paramsRoot[3];
 	// Root Signature 생성
 	// Slot 0 : BumpColor
 	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
@@ -202,6 +216,10 @@ void Dragon::InitPipelineWireframe(Graphics* Renderer)
 	// ConstantBuffer
 	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	paramsRoot[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_ALL);
+
+	// Slot 2 : Normal Map
+	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
+	paramsRoot[2].InitAsDescriptorTable(1, &range[2]);
 
 	CD3DX12_STATIC_SAMPLER_DESC descSamplers[2];
 	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
@@ -225,8 +243,12 @@ void Dragon::InitPipelineWireframe(Graphics* Renderer)
 	// Shader Compile
 	D3D12_SHADER_BYTECODE PSBytecode = {};
 	D3D12_SHADER_BYTECODE VSBytecode = {};
-	Renderer->CompileShader(L"VertexShader2D.hlsl", "VS2D", VSBytecode, VERTEX_SHADER);
-	Renderer->CompileShader(L"PixelShader2D.hlsl", "PS2D", PSBytecode, PIXEL_SHADER);
+	D3D12_SHADER_BYTECODE HSBytecode = {};
+	D3D12_SHADER_BYTECODE DSBytecode = {};
+	Renderer->CompileShader(L"VertexShader_dragon.hlsl", "VS_DRAGON", VSBytecode, VERTEX_SHADER);
+	Renderer->CompileShader(L"PixelShader_dragon.hlsl", "PS_DRAGON", PSBytecode, PIXEL_SHADER);
+	Renderer->CompileShader(L"HullShader_dragon.hlsl", "HS_DRAGON", HSBytecode, HULL_SHADER);
+	Renderer->CompileShader(L"DomainShader_dragon.hlsl", "DS_DRAGON", DSBytecode, DOMAIN_SHADER);
 
 	// Input Layout 생성
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
@@ -246,13 +268,16 @@ void Dragon::InitPipelineWireframe(Graphics* Renderer)
 	psoDesc.InputLayout = inputLayoutDesc;
 	psoDesc.VS = VSBytecode;
 	psoDesc.PS = PSBytecode;
+	psoDesc.HS = HSBytecode;
+	psoDesc.DS = DSBytecode;
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+	//psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	psoDesc.SampleDesc.Count = 1;
@@ -276,29 +301,53 @@ void Dragon::CreateDescriptorHeap(Graphics* Renderer)
 	ID3D12Resource* BumpColor;
 	D3D12_SUBRESOURCE_DATA BumpColorMapData;
 
-	D3D12_SHADER_RESOURCE_VIEW_DESC	srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = 1;
-
 	LoadWICTextureFromFileEx(Renderer->GetDevice().Get(), L"models/Dragon/textures/Dragon_Bump_Col2.jpg", 0, D3D12_RESOURCE_FLAG_NONE, WIC_LOADER_FORCE_RGBA32, &BumpColor, BumpColordecodeData, BumpColorMapData);
 
 	const UINT64 BumpColorSize = GetRequiredIntermediateSize(BumpColor, 0, 1);
 
+	// NormalMap 생성
+	std::unique_ptr<uint8_t[]> normalMapdecodeData;
+	ID3D12Resource* normalMap;
+	D3D12_SUBRESOURCE_DATA normalMapData;
+
+	LoadWICTextureFromFileEx(Renderer->GetDevice().Get(), L"models/Dragon/textures/Dragon_Nor_mirror2.jpg", 0, D3D12_RESOURCE_FLAG_NONE, WIC_LOADER_FORCE_RGBA32, &normalMap, normalMapdecodeData, normalMapData);
+
+	const UINT64 normalMapSize = GetRequiredIntermediateSize(normalMap, 0, 1);
+
+	// 업로드 버퍼 생성
 	Renderer->GetDevice()->CreateCommittedResource(
 		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(BumpColorSize),
+		&CD3DX12_RESOURCE_DESC::Buffer(BumpColorSize + normalMapSize),
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&m_uploadHeap));
 
+	// BumpColor 업로드
 	UpdateSubresources(Renderer->GetCommandList().Get(), BumpColor, m_uploadHeap, 0, 0, 1, &BumpColorMapData);
 
 	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(BumpColor, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 	CD3DX12_CPU_DESCRIPTOR_HANDLE handleSRV(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_srvDescSize); // SRV Heap의 첫번째 항목
+
+	D3D12_SHADER_RESOURCE_VIEW_DESC	srvDesc = {};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = BumpColor->GetDesc().Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = BumpColor->GetDesc().MipLevels;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+
 	Renderer->CreateSRV(BumpColor, &srvDesc, handleSRV);
+
+	// NormalMap 업로드
+	UpdateSubresources(Renderer->GetCommandList().Get(), normalMap, m_uploadHeap, BumpColorSize, 0, 1, &normalMapData);
+
+	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(normalMap, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+	handleSRV.Offset(2, m_srvDescSize); // SRV Heap의 두번째 항목
+
+	srvDesc.Format = normalMap->GetDesc().Format;
+	srvDesc.Texture2D.MipLevels = normalMap->GetDesc().MipLevels;
+	Renderer->CreateSRV(normalMap, &srvDesc, handleSRV);
 }
 
 void Dragon::CreateConstantBuffer(Graphics* Renderer)

@@ -2,9 +2,11 @@ Texture2D<float4> colormap : register(t0);
 SamplerState hmsampler : register(s0);
 SamplerState cmsampler : register(s1);
 
-struct VS_OUTPUT {
-	float4 pos : SV_POSITION;
-	float2 tex : TEXCOORD;
+struct DS_OUTPUT
+{
+    float4 pos : SV_POSITION;
+    //float3 tan : TANGENT;
+    float2 tex : TEXCOORD;
 };
 
 cbuffer ConstantBuffer : register(b0)
@@ -16,8 +18,7 @@ cbuffer ConstantBuffer : register(b0)
     int width;
 }
 
-float4 PS2D(VS_OUTPUT input) : SV_TARGET{
-	
+float4 PS_DRAGON(DS_OUTPUT input) : SV_TARGET
+{
     return colormap.Sample(cmsampler, input.tex);
-
 }
