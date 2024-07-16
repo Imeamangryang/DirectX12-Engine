@@ -25,7 +25,7 @@ m_worldTransform(MathHelper::Identity4x4())
 	InitPipeline(renderer);;
 	InitPipelineWireframe(renderer);
 
-	LoadFBXModel(renderer, "models/Dragon/Dragon 2.5_fbx.fbx");
+	LoadFBXModel(renderer, "models/Dragon/Dragon_Baked_Actions_fbx_6.1_ASCII.fbx");
 
 	m_objectname = "Dragon";
 

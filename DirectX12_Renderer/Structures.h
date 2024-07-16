@@ -108,6 +108,7 @@ struct FbxBoneInfo
 {
 	string					boneName;
 	UINT					parentIndex;
+	UINT					childcount;
 	FbxAMatrix				matOffset;
 };
 

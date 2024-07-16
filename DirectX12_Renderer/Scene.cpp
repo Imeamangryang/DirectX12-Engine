@@ -1,5 +1,35 @@
 #include "Scene.h"
 
+// Draon Bone Tree Draw
+void DrawTree(const vector<shared_ptr<FbxBoneInfo>>& bones, UINT& index)
+{
+	if (index >= bones.size())
+		return;
+
+	auto& bone = bones[index];
+
+	// 자식 노드 없음
+	if (bone->childcount == 0)
+	{
+		ImGui::BulletText(bone->boneName.c_str());
+		return;
+	}
+	// 자식 노드 있음
+	else {
+		if (ImGui::TreeNode(bones[index]->boneName.c_str())) {
+			UINT parentindex = index;
+			for (int i = 0; i < bone->childcount; i++) {
+				index += 1;
+				while (parentindex != bones[index]->parentIndex) {
+					index += 1;
+				}
+				DrawTree(bones, index);
+			}
+			ImGui::TreePop();
+		}
+	}
+}
+
 Scene::Scene(int height, int width, Graphics* renderer) : 
 	m_terrain(renderer),
 	m_sky(renderer),
@@ -151,12 +181,13 @@ void Scene::Draw()
 				ImGui::BulletText("Index Count : %d", m_dragon.m_indexcount);
 
 				if (ImGui::TreeNode("Bone Tree")) {
-					for (auto& bone : m_dragon.m_boneInfos) {
-						// bone.get()->parentIndex가 0이 아니면 부모가 있다는 뜻
-						// 계층 구조로 출력
-						
+					for(UINT i = 1; i < m_dragon.m_boneInfos.size(); i++)
+					{
+						if(m_dragon.m_boneInfos[i]->parentIndex == 0)
+						{
+							DrawTree(m_dragon.m_boneInfos, i);
+						}
 					}
-						
 					ImGui::TreePop();
 				}
 

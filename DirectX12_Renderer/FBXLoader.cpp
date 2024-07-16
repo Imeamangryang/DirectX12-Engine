@@ -279,6 +279,7 @@ void FBXLoader::LoadBones(FbxNode* node, UINT idx, UINT parentIdx)
 		shared_ptr<FbxBoneInfo> bone = make_shared<FbxBoneInfo>();
 		bone->boneName = node->GetName();
 		bone->parentIndex = parentIdx;
+		bone->childcount = node->GetChildCount();
 		_bones.push_back(bone);
 	}
 
