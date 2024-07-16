@@ -20,6 +20,6 @@ public:
 private:
 	UINT						m_period;	// the number of game milliseconds that each real time millisecond should count as.
 	DirectionalLight			m_Sun;		// light source representing the sun. 
-	DirectionalLight			m_Moon;	// light source representing the moon.
+	DirectionalLight			m_Moon;	// light source representing the moon.e
 	time_point<system_clock>	m_Last;		// the last point in time that we updated our cycle.
 };

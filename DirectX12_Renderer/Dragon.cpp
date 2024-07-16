@@ -17,6 +17,7 @@ m_indexBuffer(nullptr),
 m_indexBufferUpload(nullptr),
 m_vertexBufferView(),
 m_indexBufferView(),
+m_light(),
 m_worldTransform(MathHelper::Identity4x4())
 {
 	CreateDescriptorHeap(renderer);
@@ -81,7 +82,8 @@ void Dragon::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 vi
 	m_constantBufferData.eye = eye;
 	m_constantBufferData.height = m_height;
 	m_constantBufferData.width = m_width;
-	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(SkyConstantBuffer));
+	m_constantBufferData.light = m_light.GetDirectionalLight();
+	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
 	m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
@@ -289,7 +291,7 @@ void Dragon::CreateDescriptorHeap(Graphics* Renderer)
 {
 	// SRV Discriptor Heap »ý¼º
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = 2;
+	srvHeapDesc.NumDescriptors = 3;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	Renderer->CreateDescriptorHeap(&srvHeapDesc, m_srvHeap);
@@ -352,7 +354,7 @@ void Dragon::CreateDescriptorHeap(Graphics* Renderer)
 
 void Dragon::CreateConstantBuffer(Graphics* Renderer)
 {
-	UINT64 bufferSize = sizeof(SkyConstantBuffer);
+	UINT64 bufferSize = sizeof(ConstantBuffer);
 	Renderer->CreateBuffer(m_CBV, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize));
 	m_CBV->SetName(L"CBV");
 
@@ -404,6 +406,8 @@ void Dragon::LoadFBXModel(Graphics* Renderer, string path)
 
 		meshes.push_back(meshdata);
 	}
+
+	m_boneInfos = loader.GetBones();
 
 	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
 	const std::uint32_t ibByteSize = (UINT)indices.size() * sizeof(std::uint32_t);

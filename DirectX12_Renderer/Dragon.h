@@ -4,6 +4,7 @@
 #include "Structures.h"
 #include "Object.h"
 #include "FBXLoader.h"
+#include "DirectionalLight.h"
 
 using namespace graphics;
 
@@ -18,6 +19,9 @@ public:
 	void ClearUnusedUploadBuffersAfterInit();
 
 	void SetIsWireframe(bool isWireframe) { this->isWireframe = isWireframe; }
+
+
+	vector<shared_ptr<FbxBoneInfo>> m_boneInfos;
 
 private:
 	void InitPipeline(Graphics* Renderer);
@@ -54,4 +58,7 @@ private:
 	XMFLOAT4X4 m_worldTransform;
 
 	std::vector<FbxMeshData> meshes;
+
+	DirectionalLight m_light;
+
 };

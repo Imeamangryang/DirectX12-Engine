@@ -1,11 +1,24 @@
 Texture2D<float4> normalmap : register(t1);
 SamplerState dmsampler : register(s0);
 
+struct LightData
+{
+    float4 pos;
+    float4 amb;
+    float4 dif;
+    float4 spec;
+    float3 att;
+    float rng;
+    float3 dir;
+    float sexp;
+};
+
 cbuffer ConstantBuffer : register(b0)
 {
     float4x4 world;
     float4x4 viewproj;
     float4 eye;
+    LightData light;
     int height;
     int width;
 }

@@ -150,6 +150,16 @@ void Scene::Draw()
 				ImGui::SameLine();
 				ImGui::BulletText("Index Count : %d", m_dragon.m_indexcount);
 
+				if (ImGui::TreeNode("Bone Tree")) {
+					for (auto& bone : m_dragon.m_boneInfos) {
+						// bone.get()->parentIndex가 0이 아니면 부모가 있다는 뜻
+						// 계층 구조로 출력
+						
+					}
+						
+					ImGui::TreePop();
+				}
+
 				ImGui::TreePop();
 			}
 			if (ImGui::TreeNode(m_cube.m_objectname.c_str())) {
@@ -179,13 +189,14 @@ void Scene::Draw()
 	// DirectX Render
 	m_renderer->ResetPipeline();
 
-	m_renderer->SetBackBufferRender(m_renderer->GetCommandList(), DirectX::Colors::DarkBlue);
+	m_renderer->SetBackBufferRender(m_renderer->GetCommandList(), DirectX::Colors::LightBlue);
 
 	SetViewport();
 
 	// WireFrame Draw Setting
 	if (m_DrawMode == 1)
 	{
+		m_sky.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 		m_terrain.SetIsWireframe(false);
 		m_moon.SetIsWireframe(false);
 		m_character.SetIsWireframe(false);
@@ -203,7 +214,6 @@ void Scene::Draw()
 
 	// Object Draw
 	{
-		m_sky.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 		m_terrain.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 		m_cube.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 		m_moon.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());

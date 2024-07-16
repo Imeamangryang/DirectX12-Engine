@@ -48,8 +48,8 @@ float4 PSTes(DS_OUTPUT input) : SV_TARGET
 	float4 ambient = color * light.amb;
 	float4 diffuse = color * light.dif * dot(-light.dir, norm);
 	float3 V = reflect(light.dir, norm);
-	float3 toEye = normalize(eye.xyz - input.pos);
+	float3 toEye = normalize(eye.xyz - input.pos.xyz);
 	float4 specular = color * 0.1f * light.spec * pow(max(dot(V, toEye), 0.0f), 1.0f);
 
-	return saturate(ambient + diffuse + specular);
+    return saturate(ambient + diffuse + specular);
 }

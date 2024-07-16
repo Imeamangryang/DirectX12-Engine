@@ -12,7 +12,7 @@ Moon::Moon(Graphics* renderer) : Object(renderer),
 	m_vertexBufferUpload(nullptr),
 	m_indexBuffer(nullptr),
 	m_indexBufferUpload(nullptr),
-	m_orbitCycle(5760),
+	m_light(),
 	m_worldTransform(MathHelper::Identity4x4())
 {
 	LoadHeightMap(renderer, L"resource/ldem_16.tif", L"resource/lroc_color_poles_4k.tif");
@@ -94,7 +94,7 @@ void Moon::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 	m_constantBufferData.eye = eye;
 	m_constantBufferData.height = m_height;
 	m_constantBufferData.width = m_width;
-	m_constantBufferData.light = m_orbitCycle.GetLight();
+	m_constantBufferData.light = m_light.GetDirectionalLight();
 	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };

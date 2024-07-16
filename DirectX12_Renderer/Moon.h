@@ -1,10 +1,10 @@
 #pragma once
 
 #include "Renderer.h"
-#include "OrbitCycle.h"
 #include "stdafx.h"
 #include "Structures.h"
 #include "Object.h"
+#include "DirectionalLight.h"
 
 using namespace graphics;
 
@@ -53,6 +53,8 @@ private:
 	ID3D12Resource* m_indexBufferUpload;
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW	m_indexBufferView;
-	OrbitCycle m_orbitCycle;
+
 	XMFLOAT4X4 m_worldTransform;
+
+	DirectionalLight m_light;
 };

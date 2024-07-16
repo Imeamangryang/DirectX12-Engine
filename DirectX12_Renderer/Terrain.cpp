@@ -13,7 +13,7 @@ Terrain::Terrain(Graphics* renderer) : Object(renderer),
 	m_vertexBufferUpload(nullptr),
 	m_indexBuffer(nullptr),
 	m_indexBufferUpload(nullptr),
-	m_orbitCycle(5760),
+	m_orbitCycle(57600),
 	m_worldTransform(MathHelper::Identity4x4())
 {
 	LoadHeightMap(renderer, L"resource/gebco_08_rev_elev_21600x10800.PNG", L"resource/land_shallow_topo_2048.tif");
