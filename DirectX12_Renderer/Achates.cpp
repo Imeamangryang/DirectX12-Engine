@@ -10,6 +10,8 @@ Achates::Achates(Graphics* renderer) : Object(renderer),
 	m_rootSignature(nullptr),
 	m_CBV(nullptr),
 	m_cbvDataBegin(nullptr),
+	m_CBV2(nullptr),
+	m_cbv2DataBegin(nullptr),
 	m_srvDescSize(0),
 	m_vertexBuffer(nullptr),
 	m_vertexBufferUpload(nullptr),
@@ -26,6 +28,7 @@ Achates::Achates(Graphics* renderer) : Object(renderer),
 	InitPipelineWireframe(renderer);
 
 	LoadFBXModel(renderer, "models/Achates/Achates.fbx");
+	LoadFBXAnimation(renderer, "models/Achates/Achates_Anim_walk_normal_1.fbx");
 
 	m_objectname = "Achates";
 
@@ -82,6 +85,10 @@ void Achates::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 v
 	m_constantBufferData.light = m_light.GetDirectionalLight();
 	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
 
+	m_constantBuffer2Data.edgeTessellationFactor = m_edgetesFactor;
+	m_constantBuffer2Data.insideTessellationFactor = m_insidetesFactor;
+	memcpy(m_cbv2DataBegin, &m_constantBuffer2Data, sizeof(CharacterConstantBuffer));
+
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
 	m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
 	m_commandList->SetGraphicsRootDescriptorTable(0, m_srvHeap->GetGPUDescriptorHandleForHeapStart());
@@ -89,6 +96,8 @@ void Achates::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 v
 	m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE srvhandle2(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_srvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(2, srvhandle2);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle2(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_srvDescSize);
+	m_commandList->SetGraphicsRootDescriptorTable(3, cbvHandle2);
 
 	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST); // describe how to read the vertex buffer.
 	//m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // describe how to read the vertex buffer.
@@ -123,8 +132,8 @@ void Achates::ClearUnusedUploadBuffersAfterInit()
 
 void Achates::InitPipeline(Graphics* Renderer)
 {
-	CD3DX12_DESCRIPTOR_RANGE range[3];
-	CD3DX12_ROOT_PARAMETER paramsRoot[3];
+	CD3DX12_DESCRIPTOR_RANGE range[4];
+	CD3DX12_ROOT_PARAMETER paramsRoot[4];
 	// Root Signature 积己
 	// Slot 0 : BumpColor
 	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
@@ -137,6 +146,10 @@ void Achates::InitPipeline(Graphics* Renderer)
 	// Slot 2 : Normal Map
 	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 	paramsRoot[2].InitAsDescriptorTable(1, &range[2]);
+
+	// CharacterConstantBuffer
+	range[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+	paramsRoot[3].InitAsDescriptorTable(1, &range[3], D3D12_SHADER_VISIBILITY_ALL);
 
 	CD3DX12_STATIC_SAMPLER_DESC descSamplers[2];
 	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
@@ -164,7 +177,7 @@ void Achates::InitPipeline(Graphics* Renderer)
 	D3D12_SHADER_BYTECODE DSBytecode = {};
 	Renderer->CompileShader(L"VertexShader_dragon.hlsl", "VS_DRAGON", VSBytecode, VERTEX_SHADER);
 	Renderer->CompileShader(L"PixelShader_dragon.hlsl", "PS_DRAGON", PSBytecode, PIXEL_SHADER);
-	Renderer->CompileShader(L"HullShader_dragon.hlsl", "HS_DRAGON", HSBytecode, HULL_SHADER);
+	Renderer->CompileShader(L"HullShader_LOD.hlsl", "HS_LOD", HSBytecode, HULL_SHADER);
 	Renderer->CompileShader(L"DomainShader_dragon.hlsl", "DS_DRAGON", DSBytecode, DOMAIN_SHADER);
 
 
@@ -205,8 +218,8 @@ void Achates::InitPipeline(Graphics* Renderer)
 
 void Achates::InitPipelineWireframe(Graphics* Renderer)
 {
-	CD3DX12_DESCRIPTOR_RANGE range[3];
-	CD3DX12_ROOT_PARAMETER paramsRoot[3];
+	CD3DX12_DESCRIPTOR_RANGE range[4];
+	CD3DX12_ROOT_PARAMETER paramsRoot[4];
 	// Root Signature 积己
 	// Slot 0 : BumpColor
 	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
@@ -219,6 +232,10 @@ void Achates::InitPipelineWireframe(Graphics* Renderer)
 	// Slot 2 : Normal Map
 	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
 	paramsRoot[2].InitAsDescriptorTable(1, &range[2]);
+
+	// CharacterConstantBuffer
+	range[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+	paramsRoot[3].InitAsDescriptorTable(1, &range[3], D3D12_SHADER_VISIBILITY_ALL);
 
 	CD3DX12_STATIC_SAMPLER_DESC descSamplers[2];
 	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
@@ -246,7 +263,7 @@ void Achates::InitPipelineWireframe(Graphics* Renderer)
 	D3D12_SHADER_BYTECODE DSBytecode = {};
 	Renderer->CompileShader(L"VertexShader_dragon.hlsl", "VS_DRAGON", VSBytecode, VERTEX_SHADER);
 	Renderer->CompileShader(L"PixelShader_dragon.hlsl", "PS_DRAGON", PSBytecode, PIXEL_SHADER);
-	Renderer->CompileShader(L"HullShader_dragon.hlsl", "HS_DRAGON", HSBytecode, HULL_SHADER);
+	Renderer->CompileShader(L"HullShader_LOD.hlsl", "HS_LOD", HSBytecode, HULL_SHADER);
 	Renderer->CompileShader(L"DomainShader_dragon.hlsl", "DS_DRAGON", DSBytecode, DOMAIN_SHADER);
 
 	// Input Layout 积己
@@ -288,7 +305,7 @@ void Achates::CreateDescriptorHeap(Graphics* Renderer)
 {
 	// SRV Discriptor Heap 积己
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = 3;
+	srvHeapDesc.NumDescriptors = 4;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	Renderer->CreateDescriptorHeap(&srvHeapDesc, m_srvHeap);
@@ -371,6 +388,28 @@ void Achates::CreateConstantBuffer(Graphics* Renderer)
 	{
 		throw (GFX_Exception("Failed to map CBV in Moon."));
 	}
+
+	// CharacterConstant Buffer
+	UINT64 bufferSize2 = sizeof(CharacterConstantBuffer);
+	Renderer->CreateBuffer(m_CBV2, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize2));
+	m_CBV2->SetName(L"CBV2");
+
+	// ConstantBufferView 积己
+	D3D12_CONSTANT_BUFFER_VIEW_DESC	cbvDesc2 = {};
+	cbvDesc2.BufferLocation = m_CBV2->GetGPUVirtualAddress();
+	cbvDesc2.SizeInBytes = (bufferSize2 + 255) & ~255; // Constant Buffer绰 256 byte aligned
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle2(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 3, m_srvDescSize);
+	
+	Renderer->CreateCBV(&cbvDesc2, srvHandle2);
+
+	ZeroMemory(&m_constantBuffer2Data, sizeof(m_constantBuffer2Data));
+
+	CD3DX12_RANGE readRange2(0, 0);
+	if (FAILED(m_CBV2->Map(0, &readRange2, reinterpret_cast<void**>(&m_cbv2DataBegin))))
+	{
+		throw (GFX_Exception("Failed to map CBV in Moon."));
+	}
 }
 
 void Achates::LoadFBXModel(Graphics* Renderer, string path)
@@ -436,4 +475,79 @@ void Achates::LoadFBXModel(Graphics* Renderer, string path)
 	m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
 	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	m_indexBufferView.SizeInBytes = ibByteSize;
+}
+
+void Achates::LoadFBXAnimation(Graphics* Renderer, string path)
+{
+	FBXLoader loader;
+	loader.LoadFbx(path);
+	
+	// Animation clip
+	UINT frameCount = 0;
+	vector<shared_ptr<FbxAnimClipInfo>>& animClips = loader.GetAnimClip();
+	for (shared_ptr<FbxAnimClipInfo>& ac : animClips)
+	{
+		AnimClipInfo info = {};
+
+		info.animName = ac->name;
+		info.duration = ac->endTime.GetSecondDouble() - ac->startTime.GetSecondDouble();
+
+		UINT startFrame = static_cast<UINT>(ac->startTime.GetFrameCount(ac->mode));
+		UINT endFrame = static_cast<UINT>(ac->endTime.GetFrameCount(ac->mode));
+		info.frameCount = endFrame - startFrame;
+
+		info.keyFrames.resize(ac->keyFrames.size());
+
+		const UINT boneCount = static_cast<UINT>(ac->keyFrames.size());
+		for (UINT b = 0; b < boneCount; b++)
+		{
+			auto& vec = ac->keyFrames[b];
+
+			const UINT size = static_cast<UINT>(vec.size());
+			frameCount = max(frameCount, static_cast<UINT>(size));
+			info.keyFrames[b].resize(size);
+
+			for (UINT f = 0; f < size; f++)
+			{
+				FbxKeyFrameInfo& kf = vec[f];
+				// FBX俊辑 颇教茄 沥焊甸肺 盲况霖促
+				KeyFrameInfo& kfInfo = info.keyFrames[b][f];
+				kfInfo.time = kf.time;
+				kfInfo.frame = static_cast<UINT>(size);
+				kfInfo.scale.x = static_cast<float>(kf.matTransform.GetS().mData[0]);
+				kfInfo.scale.y = static_cast<float>(kf.matTransform.GetS().mData[1]);
+				kfInfo.scale.z = static_cast<float>(kf.matTransform.GetS().mData[2]);
+				kfInfo.rotation.x = static_cast<float>(kf.matTransform.GetQ().mData[0]);
+				kfInfo.rotation.y = static_cast<float>(kf.matTransform.GetQ().mData[1]);
+				kfInfo.rotation.z = static_cast<float>(kf.matTransform.GetQ().mData[2]);
+				kfInfo.rotation.w = static_cast<float>(kf.matTransform.GetQ().mData[3]);
+				kfInfo.translate.x = static_cast<float>(kf.matTransform.GetT().mData[0]);
+				kfInfo.translate.y = static_cast<float>(kf.matTransform.GetT().mData[1]);
+				kfInfo.translate.z = static_cast<float>(kf.matTransform.GetT().mData[2]);
+			}
+		}
+
+		m_animClips.push_back(info);
+	}
+
+	// bone info
+	vector<shared_ptr<FbxBoneInfo>>& bones = loader.GetBones();
+	for (shared_ptr<FbxBoneInfo>& bone : bones)
+	{
+		BoneInfo boneInfo = {};
+		boneInfo.parentIdx = bone->parentIndex;
+		//boneInfo.matOffset = GetMatrix(bone->matOffset);
+		boneInfo.boneName = bone->boneName;
+		m_bones.push_back(boneInfo);
+	}
+
+    // Animation Frame Buffer
+    // BoneOffet 青纺
+    const UINT boneCount = static_cast<UINT>(m_bones.size());
+    vector<XMMATRIX> offsetVec(boneCount);
+
+    for (size_t b = 0; b < boneCount; b++)
+    {
+		offsetVec[b] = m_bones[b].matOffset;
+    }
 }

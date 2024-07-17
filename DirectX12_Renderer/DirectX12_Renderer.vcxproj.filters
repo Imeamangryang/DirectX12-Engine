@@ -241,6 +241,9 @@
     <FxCompile Include="DomainShader_dragon.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
+    <FxCompile Include="HullShader_LOD.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

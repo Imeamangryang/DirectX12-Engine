@@ -208,6 +208,9 @@ void Scene::Draw()
 				ImGui::DragFloat("Scale X", &m_achates.m_scale_x, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
 				ImGui::DragFloat("Scale Y", &m_achates.m_scale_y, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
 				ImGui::DragFloat("Scale Z", &m_achates.m_scale_z, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::Text("Tessellation");
+				ImGui::InputInt("Edge Tessellation Factor", &m_achates.m_edgetesFactor);
+				ImGui::InputInt("Inside Tessellation Factor", &m_achates.m_insidetesFactor);
 
 				ImGui::BulletText("Vertex Count : %d", m_achates.m_vertexcount);
 				ImGui::SameLine();
