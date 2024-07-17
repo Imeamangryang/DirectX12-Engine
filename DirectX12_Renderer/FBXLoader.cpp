@@ -205,9 +205,59 @@ void FBXLoader::GetTangent(FbxMesh* mesh, FbxMeshInfo* meshInfo, UINT idx, UINT 
 
 void FBXLoader::GetUV(FbxMesh* mesh, FbxMeshInfo* meshInfo, UINT idx, UINT uvIndex)
 {
-	FbxVector2 uv = mesh->GetElementUV()->GetDirectArray().GetAt(uvIndex);
-	meshInfo->vertices[idx].TexC.x = static_cast<float>(uv.mData[0]);
-	meshInfo->vertices[idx].TexC.y = 1.f - static_cast<float>(uv.mData[1]);
+	FbxLayerElementUV * uvElement = mesh->GetLayer(0)->GetUVs();
+
+	if (uvElement == nullptr)
+		return;
+
+	switch (uvElement->GetMappingMode())
+	{
+		case FbxLayerElementUV::eByControlPoint:
+		{
+			switch (uvElement->GetReferenceMode())
+			{
+			case FbxLayerElementUV::eDirect:
+			{
+				FbxVector2 uv = mesh->GetElementUV()->GetDirectArray().GetAt(uvIndex);
+				meshInfo->vertices[idx].TexC.x = static_cast<float>(uv.mData[0]);
+				meshInfo->vertices[idx].TexC.y = 1.f - static_cast<float>(uv.mData[1]);
+				break;
+			}
+			case FbxLayerElementUV::eIndexToDirect:
+			{
+				int id = uvElement->GetIndexArray().GetAt(uvIndex);
+				FbxVector2 uv = uvElement->GetDirectArray().GetAt(id);
+				meshInfo->vertices[idx].TexC.x = static_cast<float>(uv.mData[0]);
+				meshInfo->vertices[idx].TexC.y = 1.f - static_cast<float>(uv.mData[1]);
+				break;
+			}
+			break;
+			}
+		}
+		
+		case FbxLayerElementUV::eByPolygonVertex:
+		{
+			switch (uvElement->GetReferenceMode())
+			{
+			case FbxLayerElementUV::eDirect:
+			{
+				FbxVector2 uv = mesh->GetElementUV()->GetDirectArray().GetAt(idx);
+				meshInfo->vertices[idx].TexC.x = static_cast<float>(uv.mData[0]);
+				meshInfo->vertices[idx].TexC.y = 1.f - static_cast<float>(uv.mData[1]);
+				break;
+			}
+			case FbxLayerElementUV::eIndexToDirect:
+			{
+				FbxVector2 uv = mesh->GetElementUV()->GetDirectArray().GetAt(uvIndex);
+				meshInfo->vertices[idx].TexC.x = static_cast<float>(uv.mData[0]);
+				meshInfo->vertices[idx].TexC.y = 1.f - static_cast<float>(uv.mData[1]);
+				break;
+			}
+			break;
+			}
+		}
+		break;
+	}
 }
 
 //void FBXLoader::LoadMaterial(FbxSurfaceMaterial* surfaceMaterial)

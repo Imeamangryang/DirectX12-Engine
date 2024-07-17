@@ -8,6 +8,7 @@
 #include "Character.h"
 #include "Dragon.h"
 #include "Cube.h"
+#include "Achates.h"
 
 using namespace graphics;
 
@@ -51,7 +52,8 @@ private:
 	Terrain m_terrain;
 	Sky m_sky;
 	Moon m_moon;
-	Character m_character;
+	//Character m_character;
 	Dragon m_dragon;
 	Cube m_cube;
+	Achates m_achates;
 };
