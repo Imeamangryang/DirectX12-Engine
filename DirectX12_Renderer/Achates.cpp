@@ -12,6 +12,8 @@ Achates::Achates(Graphics* renderer) : Object(renderer),
 	m_cbvDataBegin(nullptr),
 	m_CBV2(nullptr),
 	m_cbv2DataBegin(nullptr),
+	m_cboffset(nullptr),
+	m_cboffsetBegin(nullptr),
 	m_srvDescSize(0),
 	m_vertexBuffer(nullptr),
 	m_vertexBufferUpload(nullptr),
@@ -536,7 +538,7 @@ void Achates::LoadFBXAnimation(Graphics* Renderer, string path)
 	{
 		BoneInfo boneInfo = {};
 		boneInfo.parentIdx = bone->parentIndex;
-		//boneInfo.matOffset = GetMatrix(bone->matOffset);
+		boneInfo.matOffset = GetMatrix(bone->matOffset);
 		boneInfo.boneName = bone->boneName;
 		m_bones.push_back(boneInfo);
 	}
@@ -546,8 +548,23 @@ void Achates::LoadFBXAnimation(Graphics* Renderer, string path)
     const UINT boneCount = static_cast<UINT>(m_bones.size());
     vector<XMMATRIX> offsetVec(boneCount);
 
-    for (size_t b = 0; b < boneCount; b++)
-    {
+	// Bome Transform За·Д
+	for (size_t b = 0; b < boneCount; b++)
+	{
 		offsetVec[b] = m_bones[b].matOffset;
-    }
+		m_constantBuffer2Data.BoneTransforms[b] = m_bones[b].matOffset;
+	}
+}
+
+XMMATRIX Achates::GetMatrix(FbxAMatrix& mat)
+{
+	XMMATRIX ret;
+	for(UINT y = 0; y < 4; y++)
+	{
+		for (UINT x = 0; x < 4; x++)
+		{
+			ret.r[y].m128_f32[x] = static_cast<float>(mat.Get(y, x));
+		}
+	}
+	return ret;
 }

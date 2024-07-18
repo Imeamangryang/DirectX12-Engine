@@ -128,3 +128,27 @@ struct FbxMeshData {
 	UINT StartIndexLocation = 0;
 	UINT BaseVertexLocation = 0;
 };
+
+struct KeyFrameInfo
+{
+	double	time;
+	UINT	frame;
+	XMFLOAT3	scale;
+	XMFLOAT4	rotation;
+	XMFLOAT3	translate;
+};
+
+struct BoneInfo
+{
+	string					boneName;
+	UINT					parentIdx;
+	XMMATRIX				matOffset;
+};
+
+struct AnimClipInfo
+{
+	string			animName;
+	UINT			frameCount;
+	double			duration;
+	vector<vector<KeyFrameInfo>>	keyFrames;
+};

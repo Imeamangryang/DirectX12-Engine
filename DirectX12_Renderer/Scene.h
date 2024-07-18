@@ -55,5 +55,5 @@ private:
 	//Character m_character;
 	Dragon m_dragon;
 	Cube m_cube;
-	Achates m_achates;
+	//Achates m_achates;
 };

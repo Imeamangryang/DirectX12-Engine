@@ -9,6 +9,8 @@ struct VS_INPUT
     float3 norm : NORMAL;
     float3 tan : TANGENT;
     float2 tex : TEXCOORD;
+    float4 boneindices : BONEINDICES;
+    float4 boneweight : BOMEWEIGHTS;
 };
 
 struct VS_OUTPUT
@@ -41,19 +43,18 @@ cbuffer ConstantBuffer : register(b0)
     int width;
 }
 
+cbuffer AnimationConstantBuffer : register(b1)
+{
+    matrix BoneTransforms[200];
+}
+
 VS_OUTPUT VS_DRAGON(VS_INPUT input)
 {
     VS_OUTPUT output;
 
-	//// 월드 변환 적용
-    //float4 worldPos = mul(world, float4(input.pos, 1.0f));
-    //// 뷰-프로젝션 변환 적용
-    //output.pos = mul(worldPos, viewproj);
-    
     output.pos = float4(input.pos, 1.0f);
     
     output.norm = input.norm;
-    //output.norm = normalmap.SampleLevel(hmsampler, input.tex, 0.0f).xyz;
     
     output.tan = input.tan;
     

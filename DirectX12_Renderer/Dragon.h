@@ -8,6 +8,21 @@
 
 using namespace graphics;
 
+struct AnimFrameParams
+{
+	XMFLOAT3 scale;
+	XMFLOAT4 rotation;
+	XMFLOAT3 translation;
+};
+
+struct AnimationConstantBuffer
+{
+	//int boneCount;
+	//int CurrentFrame;
+	//int nextFrame;
+	XMMATRIX BoneTransforms[200];
+};
+
 class Dragon : public Object
 {
 public:
@@ -32,6 +47,12 @@ private:
 	void CreateConstantBuffer(Graphics* Renderer);
 
 	void LoadFBXModel(Graphics* Renderer, string path);
+	void UpdateAnimation();
+
+	KeyFrameInfo InterpolateKeyFrames(const AnimClipInfo& clip, UINT boneIndex, float currentTime);
+
+	XMMATRIX GetMatrix(FbxAMatrix& mat);
+
 
 	ComPtr<ID3D12DescriptorHeap> m_srvHeap;
 	ID3D12Resource* m_uploadHeap;
@@ -48,6 +69,10 @@ private:
 	UINT8* m_cbvDataBegin;
 	UINT m_srvDescSize;
 
+	ID3D12Resource* m_CbAnim;
+	AnimationConstantBuffer m_CbAnimData;
+	UINT8* m_CbAnimDataBegin;
+
 	ID3D12Resource* m_vertexBuffer;
 	ID3D12Resource* m_vertexBufferUpload;
 	ID3D12Resource* m_indexBuffer;
@@ -61,4 +86,6 @@ private:
 
 	DirectionalLight m_light;
 
+	vector<AnimClipInfo> m_animClips;
+	vector<BoneInfo> m_bones;
 };

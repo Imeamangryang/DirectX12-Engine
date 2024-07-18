@@ -8,42 +8,12 @@
 
 using namespace graphics;
 
-struct IndexBufferInfo
-{
-	ComPtr<ID3D12Resource>		buffer;
-	D3D12_INDEX_BUFFER_VIEW		bufferView;
-	DXGI_FORMAT					format;
-	UINT						count;
-};
-
-struct KeyFrameInfo
-{
-	double	time;
-	UINT	frame;
-	XMFLOAT3	scale;
-	XMFLOAT4	rotation;
-	XMFLOAT3	translate;
-};
-
-struct BoneInfo
-{
-	string					boneName;
-	UINT					parentIdx;
-	XMMATRIX				matOffset;
-};
-
-struct AnimClipInfo
-{
-	string			animName;
-	UINT			frameCount;
-	double			duration;
-	vector<vector<KeyFrameInfo>>	keyFrames;
-};
-
 struct CharacterConstantBuffer
 {
 	int edgeTessellationFactor = 1;
 	int insideTessellationFactor = 1;
+
+	XMMATRIX BoneTransforms[96];
 };
 
 class Achates : public Object
@@ -74,6 +44,10 @@ private:
 	void LoadFBXModel(Graphics* Renderer, string path);
 	void LoadFBXAnimation(Graphics* Renderer, string path);
 
+
+	
+	XMMATRIX GetMatrix(FbxAMatrix& mat);
+
 	ComPtr<ID3D12DescriptorHeap> m_srvHeap;
 	ID3D12Resource* m_uploadHeap;
 
@@ -85,14 +59,21 @@ private:
 	ComPtr<ID3D12PipelineState> m_pipelineStateWireframe;
 	ComPtr<ID3D12RootSignature> m_rootSignature;
 
+	// Constant Buffer : World, View, Projection
 	ID3D12Resource* m_CBV;
 	ConstantBuffer m_constantBufferData;
 	UINT8* m_cbvDataBegin;
 
+	// Constant Buffer : Character 
 	ID3D12Resource* m_CBV2;
 	CharacterConstantBuffer m_constantBuffer2Data;
 	UINT8* m_cbv2DataBegin;
 	UINT m_srvDescSize;
+
+	// Constant Buffer : Bone Offset
+	ID3D12Resource* m_cboffset;
+	CharacterConstantBuffer m_cboffsetData;
+	UINT8* m_cboffsetBegin;
 
 	ID3D12Resource* m_vertexBuffer;
 	ID3D12Resource* m_vertexBufferUpload;

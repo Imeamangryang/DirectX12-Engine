@@ -38,8 +38,8 @@ Scene::Scene(int height, int width, Graphics* renderer) :
 	m_camera(height, width),
 	//m_character(renderer),
 	m_dragon(renderer),
-	m_cube(renderer),
-	m_achates(renderer)
+	m_cube(renderer)
+	//m_achates(renderer)
 {
 	m_viewport.TopLeftX = 0;
 	m_viewport.TopLeftY = 0;
@@ -64,7 +64,7 @@ Scene::Scene(int height, int width, Graphics* renderer) :
 	//m_character.ClearUnusedUploadBuffersAfterInit();
 	m_dragon.ClearUnusedUploadBuffersAfterInit();
 	m_cube.ClearUnusedUploadBuffersAfterInit();
-	m_achates.ClearUnusedUploadBuffersAfterInit();
+	//m_achates.ClearUnusedUploadBuffersAfterInit();
 }
 
 Scene::~Scene()
@@ -195,7 +195,7 @@ void Scene::Draw()
 
 				ImGui::TreePop();
 			}
-			if (ImGui::TreeNode(m_achates.m_objectname.c_str())) {
+			/*if (ImGui::TreeNode(m_achates.m_objectname.c_str())) {
 				ImGui::Text("Translation");
 				ImGui::DragFloat("Translation X", &m_achates.m_translation_x, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
 				ImGui::DragFloat("Translation Y", &m_achates.m_translation_y, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
@@ -228,7 +228,7 @@ void Scene::Draw()
 				}
 
 				ImGui::TreePop();
-			}
+			}*/
 			if (ImGui::TreeNode(m_cube.m_objectname.c_str())) {
 				ImGui::Text("Translation");
 				ImGui::DragFloat("Translation X", &m_cube.m_translation_x, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
@@ -269,7 +269,7 @@ void Scene::Draw()
 		//m_character.SetIsWireframe(false);
 		m_dragon.SetIsWireframe(false);
 		m_cube.SetIsWireframe(false);
-		m_achates.SetIsWireframe(false);
+		//m_achates.SetIsWireframe(false);
 	}
 	else
 	{
@@ -278,7 +278,7 @@ void Scene::Draw()
 		//m_character.SetIsWireframe(true);
 		m_dragon.SetIsWireframe(true);
 		m_cube.SetIsWireframe(true);
-		m_achates.SetIsWireframe(true);
+		//m_achates.SetIsWireframe(true);
 	}
 
 	// Object Draw
@@ -288,7 +288,7 @@ void Scene::Draw()
 		m_moon.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 		//m_character.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 		m_dragon.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
-		m_achates.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		//m_achates.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 	}
 
 	ImGui::Render();
