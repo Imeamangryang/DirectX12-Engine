@@ -136,13 +136,14 @@ struct KeyFrameInfo
 	XMFLOAT3	scale;
 	XMFLOAT4	rotation;
 	XMFLOAT3	translate;
+	XMFLOAT4X4	matTransform;
 };
 
 struct BoneInfo
 {
 	string					boneName;
 	UINT					parentIdx;
-	XMMATRIX				matOffset;
+	XMFLOAT4X4				matOffset;
 };
 
 struct AnimClipInfo
@@ -151,4 +152,14 @@ struct AnimClipInfo
 	UINT			frameCount;
 	double			duration;
 	vector<vector<KeyFrameInfo>>	keyFrames;
+};
+
+struct CharacterConstantBuffer
+{
+	int edgeTessellationFactor1 = 1;
+	int edgeTessellationFactor2 = 1;
+	int edgeTessellationFactor3 = 1;
+	int insideTessellationFactor = 1;
+
+	XMFLOAT4X4 BoneTransforms[96];
 };

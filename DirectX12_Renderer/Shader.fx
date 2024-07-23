@@ -1,84 +1,165 @@
-Texture2D<float4> heightmap : register(t0);
-SamplerState hmsampler : register(s0);
+#define NUM_CONTROL_POINTS 3
 
-cbuffer ConstantBuffer : register(b0)
+Texture2D<float4> colormap : register(t0);
+Texture2D<float4> normalmap : register(t1);
+Texture2D<float4> heightmap : register(t2);
+SamplerState dmsampler : register(s0);
+SamplerState cmsampler : register(s1);
+
+struct VS_INPUT
 {
-	float4x4 viewproj;
-	float4 eye;
-	int height;
-	int width;
-}
-
-// shader 1
+    float3 pos : POSITION;
+    float3 norm : NORMAL;
+    float3 tan : TANGENT;
+    float2 tex : TEXCOORD;
+};
 
 struct VS_OUTPUT
 {
-	float4 pos : SV_POSITION;
-	float2 tex : TEXCOORD;
+    float4 pos : SV_POSITION;
+    float3 norm : NORMAL;
+    float3 tan : TANGENT;
+    float2 tex : TEXCOORD;
 };
 
-
-float4 PS(VS_OUTPUT input) : SV_TARGET
+struct HS_CONTROL_POINT_OUTPUT
 {
-	return heightmap.Sample(hmsampler, input.tex);
-}
-
-VS_OUTPUT VS(uint input : SV_VERTEXID) 
-{
-	VS_OUTPUT output;
-
-	output.pos = float4(float2((input << 1) & 2, input == 0) * float2(2.0f, -4.0f) + float2(-1.0f, 1.0f), 0.0f, 1.0f);
-	output.tex = float2((output.pos.x + 1) / 2, (output.pos.y + 1) / 2);
-
-	return output;
-}
-
-
-// shader 2
-
-struct VS_OUTPUT2
-{
-	float4 pos : SV_POSITION;
-	float4 worldpos : POSITION;
-	float4 norm : NORMAL;
-	float4 tex : TEXCOORD;
+    float4 pos : SV_POSITION;
+    float3 norm : NORMAL;
+    float3 tan : TANGENT;
+    float2 tex : TEXCOORD;
 };
 
-float4 PS2(VS_OUTPUT2 input) : SV_TARGET
+struct HS_CONSTANT_DATA_OUTPUT
 {
-	float4 light = normalize(float4(1.0f, 1.0f, -1.0f, 1.0f));
-	float diffuse = saturate(dot(input.norm, -light));
-	float ambient = 0.2f;
-	float3 color = float3(1.0f, 1.0f, 1.0f);
+    float EdgeTessFactor[3] : SV_TessFactor;
+    float InsideTessFactor : SV_InsideTessFactor;
+};
 
-	return float4(saturate((color * diffuse) + (color * ambient)), 1.0f);
+struct DS_OUTPUT
+{
+    float4 pos : SV_POSITION;
+    float3 norm : NORMAL;
+    float3 tan : TANGENT;
+    float2 tex : TEXCOORD;
+};
+
+struct LightData
+{
+    float4 pos;
+    float4 amb;
+    float4 dif;
+    float4 spec;
+    float3 att;
+    float rng;
+    float3 dir;
+    float sexp;
+};
+
+cbuffer ConstantBuffer : register(b0)
+{
+    float4x4 world;
+    float4x4 viewproj;
+    float4 eye;
+    LightData light;
+    int height;
+    int width;
 }
 
-VS_OUTPUT2 VS2(float3 input : POSITION)
+// Vertex shader
+VS_OUTPUT VS(VS_INPUT input)
 {
-	VS_OUTPUT2 output;
+    VS_OUTPUT output;
+    
+    output.pos = float4(input.pos, 1.0f);
+    
+    output.norm = input.norm;
+    
+    output.tan = input.tan;
+    
+    output.tex = input.tex;
 
-	float scale = height / 1000;
-	float4 mysample = heightmap.Load(int3(input));
-	output.pos = float4(input.x, input.y, mysample.r * scale, 1.0f);
-	output.tex = float4(input.x / height, input.y / width, output.pos.z, scale);
-	output.pos = mul(output.pos, viewproj);
-
-	float zb = heightmap.Load(int3(input.xy + int2(0, -1), 0)).r * scale;
-	float zc = heightmap.Load(int3(input.xy + int2(1, 0), 0)).r * scale;
-	float zd = heightmap.Load(int3(input.xy + int2(1, 1), 0)).r * scale;
-	float ze = heightmap.Load(int3(input.xy + int2(0, 1), 0)).r * scale;
-	float zf = heightmap.Load(int3(input.xy + int2(-1, 0), 0)).r * scale;
-	float zg = heightmap.Load(int3(input.xy + int2(-1, -1), 0)).r * scale;
-
-	float x = 2 * zf + zc + zg - zb - 2 * zc - zd;
-	float y = 2 * zb + zc + zg - zd - 2 * ze - zf;
-	float z = 6.0f;
-
-	output.norm = float4(normalize(float3(x, y, z)), 1.0f);
-
-	output.worldpos = float4(input, 1.0f);
-
-	return output;
+    return output;
 }
 
+// Hull shader
+HS_CONSTANT_DATA_OUTPUT HS_Constant(
+	InputPatch<VS_OUTPUT, NUM_CONTROL_POINTS> ip,
+	uint PatchID : SV_PrimitiveID)
+{
+    HS_CONSTANT_DATA_OUTPUT Output;
+
+    Output.EdgeTessFactor[0] = 9;
+    Output.EdgeTessFactor[1] = 9;
+    Output.EdgeTessFactor[2] = 9;
+    Output.InsideTessFactor = 9;
+
+    return Output;
+}
+
+[domain("tri")]
+[partitioning("fractional_odd")]
+[outputtopology("triangle_cw")]
+[outputcontrolpoints(3)]
+[patchconstantfunc("HS_Constant")]
+HS_CONTROL_POINT_OUTPUT HS(
+	InputPatch<VS_OUTPUT, NUM_CONTROL_POINTS> ip,
+	uint i : SV_OutputControlPointID,
+	uint PatchID : SV_PrimitiveID)
+{
+    HS_CONTROL_POINT_OUTPUT Output;
+
+    Output.pos = ip[i].pos;
+    Output.norm = ip[i].norm;
+    Output.tan = ip[i].tan;
+    Output.tex = ip[i].tex;
+
+    return Output;
+}
+
+
+// Domain shader
+[domain("tri")]
+DS_OUTPUT DS(
+    HS_CONSTANT_DATA_OUTPUT input,
+    float3 domain : SV_DomainLocation,
+    const OutputPatch<HS_CONTROL_POINT_OUTPUT, NUM_CONTROL_POINTS> patch)
+{
+    DS_OUTPUT Output;
+
+    Output.pos = float4(patch[0].pos.xyz * domain.x + patch[1].pos.xyz * domain.y + patch[2].pos.xyz * domain.z, 1);
+    
+    Output.norm = normalize(patch[0].norm.xyz * domain.x + patch[1].norm.xyz * domain.y + patch[2].norm.xyz * domain.z);
+    
+    Output.tan = normalize(patch[0].tan.xyz * domain.x + patch[1].tan.xyz * domain.y + patch[2].tan.xyz * domain.z);
+
+    Output.tex = float2(patch[0].tex.xy * domain.x + patch[1].tex.xy * domain.y + patch[2].tex.xy * domain.z);
+    
+    //Output.norm += normalmap.SampleLevel(dmsampler, Output.tex, 0).xyz;
+    float height = heightmap.SampleLevel(dmsampler, Output.tex.xy, 0).r;
+    
+    Output.pos.xyz += Output.norm * height;
+    
+    Output.pos = mul(world, Output.pos);
+    Output.pos = mul(Output.pos, viewproj);
+    
+    return Output;
+}
+
+// Pixel shader
+float4 PS(DS_OUTPUT input) : SV_TARGET
+{
+    float3 norm = normalmap.Sample(cmsampler, input.tex).xyz;
+    norm = normalize(norm);
+    
+    float4 color = float4(colormap.Sample(cmsampler, input.tex));
+    
+    float4 ambient = color * light.amb;
+    float4 diffuse = color * light.dif * dot(-light.dir, norm);
+    float3 V = reflect(light.dir, norm);
+    float3 toEye = normalize(eye.xyz - input.pos.xyz);
+    float4 specular = color * 0.1f * light.spec * pow(max(dot(V, toEye), 0.0f), 1.0f);
+    
+    //return saturate(ambient + diffuse + specular);
+    return saturate(heightmap.SampleLevel(cmsampler, input.tex, 0));
+}

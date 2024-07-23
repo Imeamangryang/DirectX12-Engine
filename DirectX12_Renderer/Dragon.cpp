@@ -27,7 +27,7 @@ m_worldTransform(MathHelper::Identity4x4())
 	InitPipeline(renderer);;
 	InitPipelineWireframe(renderer);
 
-	LoadFBXModel(renderer, "models/Dragon/Dragon_Baked_Actions_fbx_6.1_ASCII.fbx");
+	LoadFBXModel(renderer, "models/Dragon/Dragon.fbx");
 
 	m_objectname = "Dragon";
 
@@ -86,6 +86,12 @@ void Dragon::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 vi
 	m_constantBufferData.width = m_width;
 	m_constantBufferData.light = m_light.GetDirectionalLight();
 	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
+
+	m_CbAnimData.edgeTessellationFactor1 = m_edgetesFactor1;
+	m_CbAnimData.edgeTessellationFactor2 = m_edgetesFactor2;
+	m_CbAnimData.edgeTessellationFactor3 = m_edgetesFactor3;
+	m_CbAnimData.insideTessellationFactor = m_insidetesFactor;
+	memcpy(m_CbAnimDataBegin, &m_CbAnimData, sizeof(CharacterConstantBuffer));
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
 	m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
@@ -175,7 +181,7 @@ void Dragon::InitPipeline(Graphics* Renderer)
 	D3D12_SHADER_BYTECODE DSBytecode = {};
 	Renderer->CompileShader(L"VertexShader_dragon.hlsl", "VS_DRAGON", VSBytecode, VERTEX_SHADER);
 	Renderer->CompileShader(L"PixelShader_dragon.hlsl", "PS_DRAGON", PSBytecode, PIXEL_SHADER);
-	Renderer->CompileShader(L"HullShader_dragon.hlsl", "HS_DRAGON", HSBytecode, HULL_SHADER);
+	Renderer->CompileShader(L"HullShader_LOD.hlsl", "HS_LOD", HSBytecode, HULL_SHADER);
 	Renderer->CompileShader(L"DomainShader_dragon.hlsl", "DS_DRAGON", DSBytecode, DOMAIN_SHADER);
 
 
@@ -263,7 +269,7 @@ void Dragon::InitPipelineWireframe(Graphics* Renderer)
 	D3D12_SHADER_BYTECODE DSBytecode = {};
 	Renderer->CompileShader(L"VertexShader_dragon.hlsl", "VS_DRAGON", VSBytecode, VERTEX_SHADER);
 	Renderer->CompileShader(L"PixelShader_dragon.hlsl", "PS_DRAGON", PSBytecode, PIXEL_SHADER);
-	Renderer->CompileShader(L"HullShader_dragon.hlsl", "HS_DRAGON", HSBytecode, HULL_SHADER);
+	Renderer->CompileShader(L"HullShader_LOD.hlsl", "HS_LOD", HSBytecode, HULL_SHADER);
 	Renderer->CompileShader(L"DomainShader_dragon.hlsl", "DS_DRAGON", DSBytecode, DOMAIN_SHADER);
 
 	// Input Layout 생성
@@ -499,9 +505,9 @@ void Dragon::LoadFBXModel(Graphics* Renderer, string path)
 		{
 			auto& vec = ac->keyFrames[b];
 
-			const UINT size = static_cast<UINT>(vec.size());
-			frameCount = max(frameCount, static_cast<UINT>(size));
-			info.keyFrames[b].resize(size);
+			const UINT64 size = vec.size();
+			frameCount = max(frameCount, size);
+			info.keyFrames[b].resize(size*2);
 
 			for (UINT f = 0; f < size; f++)
 			{
@@ -520,6 +526,7 @@ void Dragon::LoadFBXModel(Graphics* Renderer, string path)
 				kfInfo.translate.x = static_cast<float>(kf.matTransform.GetT().mData[0]);
 				kfInfo.translate.y = static_cast<float>(kf.matTransform.GetT().mData[1]);
 				kfInfo.translate.z = static_cast<float>(kf.matTransform.GetT().mData[2]);
+				kfInfo.matTransform = GetMatrix(kf.matTransform);
 			}
 		}
 
@@ -540,26 +547,26 @@ void Dragon::LoadFBXModel(Graphics* Renderer, string path)
 	// Animation Frame Buffer
 	// BoneOffet 행렬
 	const UINT boneCount = static_cast<UINT>(m_bones.size());
-	vector<XMMATRIX> offsetVec(boneCount);
+	vector<XMFLOAT4X4> offsetVec(boneCount);
 
 	// Bome Transform 행렬
-	for (size_t b = 0; b < boneCount; b++)
+	for (int b = 0; b < boneCount; b++)
 	{
-		m_CbAnimData.BoneTransforms[b] = m_bones[b].matOffset;
+		offsetVec[b] = m_bones[b].matOffset;
+
+		// BoneTransforms 초기화
+		m_CbAnimData.BoneTransforms[b] = offsetVec[b];
 	}
-
-	memcpy(m_CbAnimDataBegin, &m_CbAnimData, sizeof(AnimationConstantBuffer));
-
 }
 
-XMMATRIX Dragon::GetMatrix(FbxAMatrix& mat)
+XMFLOAT4X4 Dragon::GetMatrix(FbxAMatrix& mat)
 {
-	XMMATRIX ret;
+	XMFLOAT4X4 ret;
 	for (UINT y = 0; y < 4; y++)
 	{
 		for (UINT x = 0; x < 4; x++)
 		{
-			ret.r[y].m128_f32[x] = static_cast<float>(mat.Get(y, x));
+			ret.m[y][x] = static_cast<float>(mat.Get(x, y));
 		}
 	}
 	return ret;

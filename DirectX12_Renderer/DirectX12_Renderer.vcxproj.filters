@@ -81,26 +81,14 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>PCH</Filter>
     </ClCompile>
-    <ClCompile Include="Sky.cpp">
-      <Filter>Source Files\Objects</Filter>
-    </ClCompile>
     <ClCompile Include="MathHelper.cpp">
       <Filter>Source Files\Util</Filter>
-    </ClCompile>
-    <ClCompile Include="Character.cpp">
-      <Filter>Source Files\Objects</Filter>
     </ClCompile>
     <ClCompile Include="FBXLoader.cpp">
       <Filter>Source Files\Util</Filter>
     </ClCompile>
     <ClCompile Include="Structures.h">
       <Filter>Header Files\Util</Filter>
-    </ClCompile>
-    <ClCompile Include="Moon.cpp">
-      <Filter>Source Files\Objects</Filter>
-    </ClCompile>
-    <ClCompile Include="Terrain.cpp">
-      <Filter>Source Files\Objects</Filter>
     </ClCompile>
     <ClCompile Include="Object.cpp">
       <Filter>Source Files\Objects</Filter>
@@ -111,8 +99,8 @@
     <ClCompile Include="Cube.cpp">
       <Filter>Source Files\Objects</Filter>
     </ClCompile>
-    <ClCompile Include="Achates.cpp">
-      <Filter>Source Files\Objects</Filter>
+    <ClCompile Include="ImGuiLoader.cpp">
+      <Filter>Source Files\Util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -167,26 +155,14 @@
     <ClInclude Include="Main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Terrain.h">
-      <Filter>Header Files\Objects</Filter>
-    </ClInclude>
-    <ClInclude Include="Sky.h">
-      <Filter>Header Files\Objects</Filter>
-    </ClInclude>
     <ClInclude Include="MathHelper.h">
       <Filter>Header Files\Util</Filter>
     </ClInclude>
     <ClInclude Include="D3DX12.h">
       <Filter>Header Files\Util</Filter>
     </ClInclude>
-    <ClInclude Include="Character.h">
-      <Filter>Header Files\Objects</Filter>
-    </ClInclude>
     <ClInclude Include="FBXLoader.h">
       <Filter>Header Files\Util</Filter>
-    </ClInclude>
-    <ClInclude Include="Moon.h">
-      <Filter>Header Files\Objects</Filter>
     </ClInclude>
     <ClInclude Include="Object.h">
       <Filter>Header Files\Objects</Filter>
@@ -197,36 +173,12 @@
     <ClInclude Include="Cube.h">
       <Filter>Header Files\Objects</Filter>
     </ClInclude>
-    <ClInclude Include="Achates.h">
-      <Filter>Header Files\Objects</Filter>
+    <ClInclude Include="ImGuiLoader.h">
+      <Filter>Header Files\Util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="PixelShader.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="VertexShader.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
     <FxCompile Include="Shader.fx">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="VertexShaderTes.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="PixelShaderTes.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="HullShader.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="DomainShader.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="PixelShader2D.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="VertexShader2D.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
     <FxCompile Include="VertexShader_dragon.hlsl">
@@ -239,9 +191,6 @@
       <Filter>Resource Files</Filter>
     </FxCompile>
     <FxCompile Include="DomainShader_dragon.hlsl">
-      <Filter>Resource Files</Filter>
-    </FxCompile>
-    <FxCompile Include="HullShader_LOD.hlsl">
       <Filter>Resource Files</Filter>
     </FxCompile>
   </ItemGroup>

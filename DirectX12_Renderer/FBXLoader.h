@@ -1,6 +1,8 @@
 #pragma once
 #include "stdafx.h"
 #include "Structures.h"
+#include <fstream>
+#include <iomanip>
 
 using Microsoft::WRL::ComPtr;
 using namespace DirectX;
@@ -47,6 +49,11 @@ private:
 	FbxAMatrix GetTransform(FbxNode* node);
 
 	void FillBoneWeight(FbxMesh* mesh, FbxMeshInfo* meshInfo);
+
+	// File IO
+	void SaveMeshInfoToFile(const std::string& filename);
+	void SaveBonesToFile(const std::string& filename);
+	void SaveAnimationClipsToFile(const std::string& filename);
 
 private:
 	FbxManager* _manager = nullptr;

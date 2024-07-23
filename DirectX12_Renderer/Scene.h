@@ -1,15 +1,9 @@
 #pragma once
 
 #include "stdafx.h"
-#include "Terrain.h"
 #include "Camera.h"
-#include "Sky.h"
-#include "Moon.h"
-#include "Character.h"
-#include "Dragon.h"
 #include "Cube.h"
-#include "Achates.h"
-
+#include "ImGuiLoader.h"
 using namespace graphics;
 
 #define SPEED 1000.0f
@@ -49,11 +43,7 @@ private:
 	D3D12_RECT m_scissorRect;
 	int m_DrawMode = 1;
 
-	Terrain m_terrain;
-	Sky m_sky;
-	Moon m_moon;
-	//Character m_character;
-	Dragon m_dragon;
+	ImGuiLoader m_imguiLoader;
+
 	Cube m_cube;
-	//Achates m_achates;
 };

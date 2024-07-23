@@ -5,6 +5,7 @@
 #include "Structures.h"
 #include "Object.h"
 #include "DDSTextureLoader.h"
+#include "DirectionalLight.h"
 
 using namespace graphics;
 
@@ -21,12 +22,9 @@ public:
 	void SetIsWireframe(bool isWireframe) { this->isWireframe = isWireframe; }
 
 private:
-	void InitPipeline(Graphics* Renderer);
-	void InitPipelineWireframe(Graphics* Renderer);
-
 	void CreateDescriptorHeap(Graphics* Renderer);
 
-	void CreateConstantBuffer(Graphics* Renderer);
+	void InitPipeline(Graphics* Renderer);
 
 	void LoadMesh(Graphics* Renderer);
 
@@ -41,7 +39,7 @@ private:
 	ComPtr<ID3D12PipelineState> m_pipelineStateWireframe;
 	ComPtr<ID3D12RootSignature> m_rootSignature;
 	ID3D12Resource* m_CBV;
-	SkyConstantBuffer m_constantBufferData;
+	ConstantBuffer m_constantBufferData;
 	UINT8* m_cbvDataBegin;
 	UINT m_srvDescSize;
 
@@ -53,4 +51,6 @@ private:
 	D3D12_INDEX_BUFFER_VIEW	m_indexBufferView;
 
 	XMFLOAT4X4 m_worldTransform;
+
+	DirectionalLight m_light;
 };

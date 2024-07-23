@@ -36,9 +36,6 @@ private:
 	UINT m_width = 0; 
 	UINT m_height = 0;
 
-	ID3D12Resource* m_CBV = nullptr;
-	ConstantBuffer m_constantBufferData;
-	UINT8* m_cbvDataBegin;
 	UINT m_srvDescSize;
 
 	ID3D12Resource* m_vertexBuffer = nullptr;

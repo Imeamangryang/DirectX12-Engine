@@ -6,6 +6,9 @@
 #include "FBXLoader.h"
 #include "DirectionalLight.h"
 
+#include <fstream>
+#include <iomanip>
+
 using namespace graphics;
 
 struct AnimFrameParams
@@ -20,6 +23,9 @@ struct AnimationConstantBuffer
 	//int boneCount;
 	//int CurrentFrame;
 	//int nextFrame;
+
+	int edgeTessellationFactor = 1;
+	int insideTessellationFactor = 1;
 	XMMATRIX BoneTransforms[200];
 };
 
@@ -38,6 +44,11 @@ public:
 
 	vector<shared_ptr<FbxBoneInfo>> m_boneInfos;
 
+	int m_edgetesFactor1 = 1;
+	int m_edgetesFactor2 = 1;
+	int m_edgetesFactor3 = 1;
+	int m_insidetesFactor = 1;
+
 private:
 	void InitPipeline(Graphics* Renderer);
 	void InitPipelineWireframe(Graphics* Renderer);
@@ -51,7 +62,7 @@ private:
 
 	KeyFrameInfo InterpolateKeyFrames(const AnimClipInfo& clip, UINT boneIndex, float currentTime);
 
-	XMMATRIX GetMatrix(FbxAMatrix& mat);
+	XMFLOAT4X4 GetMatrix(FbxAMatrix& mat);
 
 
 	ComPtr<ID3D12DescriptorHeap> m_srvHeap;
@@ -70,7 +81,7 @@ private:
 	UINT m_srvDescSize;
 
 	ID3D12Resource* m_CbAnim;
-	AnimationConstantBuffer m_CbAnimData;
+	CharacterConstantBuffer m_CbAnimData;
 	UINT8* m_CbAnimDataBegin;
 
 	ID3D12Resource* m_vertexBuffer;

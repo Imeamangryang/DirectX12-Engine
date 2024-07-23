@@ -25,6 +25,11 @@ void FBXLoader::LoadFbx(const string& path)
 	// 로드된 데이터 파싱 (Mesh/Material/Skin)
 	ParseNode(_scene->GetRootNode());
 
+	//// File IO
+	//SaveMeshInfoToFile(path);
+	//SaveBonesToFile(path);
+	//SaveAnimationClipsToFile(path);
+
 	// 우리 구조에 맞게 Texture / Material 생성
 	//CreateTextures();
 	//CreateMaterials();
@@ -50,7 +55,7 @@ void FBXLoader::Import(string path)
 
 	_scene->GetGlobalSettings().SetAxisSystem(FbxAxisSystem::DirectX);
 
-	// 씬 내에서 삼각형화 할 수 있는 모든 노드를 삼각형화 시킨다.
+	// 씬 내에서 삼각형화 할 수 있는 모든 노드를 삼각형화.
 	FbxGeometryConverter geometryConverter(_manager);
 	geometryConverter.Triangulate(_scene, true);
 
@@ -425,6 +430,82 @@ void FBXLoader::FillBoneWeight(FbxMesh* mesh, FbxMeshInfo* meshInfo)
 		memcpy(&meshInfo->vertices[v].BoneIndices, animBoneIndex, sizeof(XMFLOAT4));
 		memcpy(&meshInfo->vertices[v].BoneWeights, animBoneWeight, sizeof(XMFLOAT4));
 	}
+}
+
+void FBXLoader::SaveMeshInfoToFile(const std::string& filename)
+{
+	std::ofstream file(filename.substr(0, filename.find_last_of('.')) + "Meshinfo.txt");
+	if (!file.is_open())
+		return;
+
+	for (const auto& mesh : _meshes)
+	{
+		file << "Mesh Name: " << mesh.name << "\n";
+		file << "Vertices: " << mesh.vertices.size() << "\n";
+		for (const auto& vertex : mesh.vertices)
+		{
+			file << std::fixed << std::setprecision(3);
+			file << "Pos: " << vertex.Position.x << ", " << vertex.Position.y << ", " << vertex.Position.z;
+			file << " | Norm: " << vertex.Normal.x << ", " << vertex.Normal.y << ", " << vertex.Normal.z;
+			file << " | UV: " << vertex.TexC.x << ", " << vertex.TexC.y << "\n";
+		}
+		file << "\n";
+	}
+
+	file.close();
+}
+
+void FBXLoader::SaveBonesToFile(const std::string& filename)
+{
+	std::ofstream file(filename.substr(0, filename.find_last_of('.')) + "Bone.txt");
+	if (!file.is_open())
+		return;
+
+	for (const auto& bone : _bones)
+	{
+		file << "Bone Name: " << bone->boneName << "\n";
+		file << "Parent Index: " << bone->parentIndex << "\n";
+		file << "Child Count: " << bone->childcount << "\n\n";
+	}
+
+	file.close();
+}
+
+void FBXLoader::SaveAnimationClipsToFile(const std::string& filename)
+{
+	std::ofstream file(filename.substr(0, filename.find_last_of('.')) + "Animations.txt");
+	if (!file.is_open())
+		return;
+
+	for (const auto& animClip : _animClips)
+	{
+		file << "Animation Name: " << animClip->name << "\n";
+		file << "Start Time: " << animClip->startTime.GetTimeString() << "\n";
+		file << "End Time: " << animClip->endTime.GetTimeString() << "\n";
+		file << "Key Frames: " << "\n";
+
+		for (size_t boneIndex = 0; boneIndex < animClip->keyFrames.size(); ++boneIndex)
+		{
+			file << "Bone " << boneIndex << ":\n";
+			for (const auto& keyFrame : animClip->keyFrames[boneIndex])
+			{
+				file << "Time: " << keyFrame.time << "\n";
+				file << "Transform Matrix: \n";
+				for (int i = 0; i < 4; ++i) // FbxAMatrix는 4x4 행렬입니다.
+				{
+					file << keyFrame.matTransform.mData[i][0] << " "
+						<< keyFrame.matTransform.mData[i][1] << " "
+						<< keyFrame.matTransform.mData[i][2] << " "
+						<< keyFrame.matTransform.mData[i][3] << "\n";
+				}
+				file << "\n";
+			}
+			file << "\n";
+		}
+		file << "\n";
+	}
+
+	file.close();
 }
 
 void FBXLoader::LoadBoneWeight(FbxCluster* cluster, UINT boneIdx, FbxMeshInfo* meshInfo)
