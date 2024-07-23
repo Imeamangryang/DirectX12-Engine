@@ -219,15 +219,15 @@ DS_OUTPUT DS(
 
     Output.tex = float2(patch[0].tex.xy * domain.x + patch[1].tex.xy * domain.y + patch[2].tex.xy * domain.z);
     
-    //Output.norm += normalmap.SampleLevel(dmsampler, Output.tex, 0).xyz;
-    float height = heightmap.SampleLevel(dmsampler, Output.tex.xy, 0).r;
+    float3 norm = normalmap.SampleLevel(dmsampler, Output.tex, 0).xyz;
     
-    //Output.pos.xyz += Output.norm * height;
+    Output.pos.xyz += norm * 0.3f;
    
     Output.pos = mul(world, Output.pos);    // Transform to world space
     Output.pos = mul(Output.pos, viewproj); // Transform to homogeneous clip space
     
     Output.norm = normalize(mul(world, float4(Output.norm, 0.0f)).xyz);
+    Output.norm = normalize(mul(float4(Output.norm, 0.0f), viewproj).xyz);
     
     return Output;
 }
