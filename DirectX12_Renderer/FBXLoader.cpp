@@ -141,7 +141,7 @@ void FBXLoader::LoadMesh(FbxMesh* mesh)
 	}
 
 	// animation
-	LoadAnimationData(mesh, &meshInfo);
+	//LoadAnimationData(mesh, &meshInfo);
 }
 
 void FBXLoader::GetNormal(FbxMesh* mesh, FbxMeshInfo* container, UINT idx, UINT vertexCounter)

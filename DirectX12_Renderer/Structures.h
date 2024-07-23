@@ -14,6 +14,10 @@ struct ConstantBuffer
 	LightSource light;
 	UINT height;
 	UINT width;
+	UINT edgeTessellationFactor1 = 1;
+	UINT edgeTessellationFactor2 = 1;
+	UINT edgeTessellationFactor3 = 1;
+	UINT insideTessellationFactor = 1;
 };
 
 struct SkyConstantBuffer

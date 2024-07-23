@@ -95,6 +95,10 @@ void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 	m_constantBufferData.height = m_height;
 	m_constantBufferData.width = m_width;
 	m_constantBufferData.light = m_light.GetDirectionalLight();
+	m_constantBufferData.edgeTessellationFactor1 = m_edgetesFactor1;
+	m_constantBufferData.edgeTessellationFactor2 = m_edgetesFactor2;
+	m_constantBufferData.edgeTessellationFactor3 = m_edgetesFactor3;
+	m_constantBufferData.insideTessellationFactor = m_insidetesFactor;
 	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };

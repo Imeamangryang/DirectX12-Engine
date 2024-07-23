@@ -25,7 +25,6 @@ m_worldTransform(MathHelper::Identity4x4())
 	CreateDescriptorHeap(renderer);
 
 	InitPipeline(renderer);;
-	InitPipelineWireframe(renderer);
 
 	LoadFBXModel(renderer, "models/Dragon/Dragon.fbx");
 
@@ -85,6 +84,10 @@ void Dragon::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 vi
 	m_constantBufferData.height = m_height;
 	m_constantBufferData.width = m_width;
 	m_constantBufferData.light = m_light.GetDirectionalLight();
+	m_constantBufferData.edgeTessellationFactor1 = m_edgetesFactor1;
+	m_constantBufferData.edgeTessellationFactor2 = m_edgetesFactor2;
+	m_constantBufferData.edgeTessellationFactor3 = m_edgetesFactor3;
+	m_constantBufferData.insideTessellationFactor = m_insidetesFactor;
 	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
 
 	m_CbAnimData.edgeTessellationFactor1 = m_edgetesFactor1;
@@ -179,10 +182,11 @@ void Dragon::InitPipeline(Graphics* Renderer)
 	D3D12_SHADER_BYTECODE VSBytecode = {};
 	D3D12_SHADER_BYTECODE HSBytecode = {};
 	D3D12_SHADER_BYTECODE DSBytecode = {};
-	Renderer->CompileShader(L"VertexShader_dragon.hlsl", "VS_DRAGON", VSBytecode, VERTEX_SHADER);
-	Renderer->CompileShader(L"PixelShader_dragon.hlsl", "PS_DRAGON", PSBytecode, PIXEL_SHADER);
-	Renderer->CompileShader(L"HullShader_LOD.hlsl", "HS_LOD", HSBytecode, HULL_SHADER);
-	Renderer->CompileShader(L"DomainShader_dragon.hlsl", "DS_DRAGON", DSBytecode, DOMAIN_SHADER);
+	Renderer->CompileShader(L"shader.fx", "VS", VSBytecode, VERTEX_SHADER);
+	Renderer->CompileShader(L"shader.fx", "PS", PSBytecode, PIXEL_SHADER);
+	Renderer->CompileShader(L"shader.fx", "HS", HSBytecode, HULL_SHADER);
+	Renderer->CompileShader(L"shader.fx", "DS", DSBytecode, DOMAIN_SHADER);
+
 
 
 	// Input Layout 생성
@@ -192,8 +196,8 @@ void Dragon::InitPipeline(Graphics* Renderer)
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "BONEINDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "BOMEWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		//{ "BONEINDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		//{ "BOMEWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 	};
 
 	D3D12_INPUT_LAYOUT_DESC	inputLayoutDesc = {};
@@ -220,92 +224,8 @@ void Dragon::InitPipeline(Graphics* Renderer)
 	psoDesc.SampleDesc.Count = 1;
 
 	Renderer->createPSO(&psoDesc, m_pipelineState);
-}
 
-void Dragon::InitPipelineWireframe(Graphics* Renderer)
-{
-	CD3DX12_DESCRIPTOR_RANGE range[4];
-	CD3DX12_ROOT_PARAMETER paramsRoot[4];
-	// Root Signature 생성
-	// Slot 0 : BumpColor
-	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
-	paramsRoot[0].InitAsDescriptorTable(1, &range[0]);
-
-	// ConstantBuffer
-	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
-	paramsRoot[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_ALL);
-
-	// Slot 2 : Normal Map
-	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
-	paramsRoot[2].InitAsDescriptorTable(1, &range[2]);
-
-	// Slot 3 : Animation Constant Buffer
-	range[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
-	paramsRoot[3].InitAsDescriptorTable(1, &range[3], D3D12_SHADER_VISIBILITY_ALL);
-
-	CD3DX12_STATIC_SAMPLER_DESC descSamplers[2];
-	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
-	descSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-	descSamplers[1].Init(1, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
-	descSamplers[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-
-	CD3DX12_ROOT_SIGNATURE_DESC rootDesc;
-	rootDesc.Init(
-		_countof(paramsRoot),
-		paramsRoot,
-		2,
-		descSamplers,
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
-
-	Renderer->createRootSignature(&rootDesc, m_rootSignature);
-
-	CreateConstantBuffer(Renderer);
-
-	// Shader Compile
-	D3D12_SHADER_BYTECODE PSBytecode = {};
-	D3D12_SHADER_BYTECODE VSBytecode = {};
-	D3D12_SHADER_BYTECODE HSBytecode = {};
-	D3D12_SHADER_BYTECODE DSBytecode = {};
-	Renderer->CompileShader(L"VertexShader_dragon.hlsl", "VS_DRAGON", VSBytecode, VERTEX_SHADER);
-	Renderer->CompileShader(L"PixelShader_dragon.hlsl", "PS_DRAGON", PSBytecode, PIXEL_SHADER);
-	Renderer->CompileShader(L"HullShader_LOD.hlsl", "HS_LOD", HSBytecode, HULL_SHADER);
-	Renderer->CompileShader(L"DomainShader_dragon.hlsl", "DS_DRAGON", DSBytecode, DOMAIN_SHADER);
-
-	// Input Layout 생성
-	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "BONEINDICES", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "BOMEWEIGHTS", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-	};
-
-	D3D12_INPUT_LAYOUT_DESC	inputLayoutDesc = {};
-	inputLayoutDesc.NumElements = sizeof(inputLayout) / sizeof(D3D12_INPUT_ELEMENT_DESC);
-	inputLayoutDesc.pInputElementDescs = inputLayout;
-
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-	psoDesc.pRootSignature = m_rootSignature.Get();
-	psoDesc.InputLayout = inputLayoutDesc;
-	psoDesc.VS = VSBytecode;
-	psoDesc.PS = PSBytecode;
-	psoDesc.HS = HSBytecode;
-	psoDesc.DS = DSBytecode;
-	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	psoDesc.SampleMask = UINT_MAX;
-	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
-	//psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	psoDesc.SampleDesc.Count = 1;
-
 	Renderer->createPSO(&psoDesc, m_pipelineStateWireframe);
 }
 
@@ -484,79 +404,79 @@ void Dragon::LoadFBXModel(Graphics* Renderer, string path)
 	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	m_indexBufferView.SizeInBytes = ibByteSize;
 
-	// Animation clip
-	UINT frameCount = 0;
-	vector<shared_ptr<FbxAnimClipInfo>>& animClips = loader.GetAnimClip();
-	for (shared_ptr<FbxAnimClipInfo>& ac : animClips)
-	{
-		AnimClipInfo info = {};
+	//// Animation clip
+	//UINT frameCount = 0;
+	//vector<shared_ptr<FbxAnimClipInfo>>& animClips = loader.GetAnimClip();
+	//for (shared_ptr<FbxAnimClipInfo>& ac : animClips)
+	//{
+	//	AnimClipInfo info = {};
 
-		info.animName = ac->name;
-		info.duration = ac->endTime.GetSecondDouble() - ac->startTime.GetSecondDouble();
+	//	info.animName = ac->name;
+	//	info.duration = ac->endTime.GetSecondDouble() - ac->startTime.GetSecondDouble();
 
-		UINT startFrame = static_cast<UINT>(ac->startTime.GetFrameCount(ac->mode));
-		UINT endFrame = static_cast<UINT>(ac->endTime.GetFrameCount(ac->mode));
-		info.frameCount = endFrame - startFrame;
+	//	UINT startFrame = static_cast<UINT>(ac->startTime.GetFrameCount(ac->mode));
+	//	UINT endFrame = static_cast<UINT>(ac->endTime.GetFrameCount(ac->mode));
+	//	info.frameCount = endFrame - startFrame;
 
-		info.keyFrames.resize(ac->keyFrames.size());
+	//	info.keyFrames.resize(ac->keyFrames.size());
 
-		const UINT boneCount = static_cast<UINT>(ac->keyFrames.size());
-		for (UINT b = 0; b < boneCount; b++)
-		{
-			auto& vec = ac->keyFrames[b];
+	//	const UINT boneCount = static_cast<UINT>(ac->keyFrames.size());
+	//	for (UINT b = 0; b < boneCount; b++)
+	//	{
+	//		auto& vec = ac->keyFrames[b];
 
-			const UINT64 size = vec.size();
-			frameCount = max(frameCount, size);
-			info.keyFrames[b].resize(size*2);
+	//		const UINT64 size = vec.size();
+	//		frameCount = max(frameCount, size);
+	//		info.keyFrames[b].resize(size*2);
 
-			for (UINT f = 0; f < size; f++)
-			{
-				FbxKeyFrameInfo& kf = vec[f];
-				// FBX에서 파싱한 정보들로 채워준다
-				KeyFrameInfo& kfInfo = info.keyFrames[b][f];
-				kfInfo.time = kf.time;
-				kfInfo.frame = static_cast<UINT>(size);
-				kfInfo.scale.x = static_cast<float>(kf.matTransform.GetS().mData[0]);
-				kfInfo.scale.y = static_cast<float>(kf.matTransform.GetS().mData[1]);
-				kfInfo.scale.z = static_cast<float>(kf.matTransform.GetS().mData[2]);
-				kfInfo.rotation.x = static_cast<float>(kf.matTransform.GetQ().mData[0]);
-				kfInfo.rotation.y = static_cast<float>(kf.matTransform.GetQ().mData[1]);
-				kfInfo.rotation.z = static_cast<float>(kf.matTransform.GetQ().mData[2]);
-				kfInfo.rotation.w = static_cast<float>(kf.matTransform.GetQ().mData[3]);
-				kfInfo.translate.x = static_cast<float>(kf.matTransform.GetT().mData[0]);
-				kfInfo.translate.y = static_cast<float>(kf.matTransform.GetT().mData[1]);
-				kfInfo.translate.z = static_cast<float>(kf.matTransform.GetT().mData[2]);
-				kfInfo.matTransform = GetMatrix(kf.matTransform);
-			}
-		}
+	//		for (UINT f = 0; f < size; f++)
+	//		{
+	//			FbxKeyFrameInfo& kf = vec[f];
+	//			// FBX에서 파싱한 정보들로 채워준다
+	//			KeyFrameInfo& kfInfo = info.keyFrames[b][f];
+	//			kfInfo.time = kf.time;
+	//			kfInfo.frame = static_cast<UINT>(size);
+	//			kfInfo.scale.x = static_cast<float>(kf.matTransform.GetS().mData[0]);
+	//			kfInfo.scale.y = static_cast<float>(kf.matTransform.GetS().mData[1]);
+	//			kfInfo.scale.z = static_cast<float>(kf.matTransform.GetS().mData[2]);
+	//			kfInfo.rotation.x = static_cast<float>(kf.matTransform.GetQ().mData[0]);
+	//			kfInfo.rotation.y = static_cast<float>(kf.matTransform.GetQ().mData[1]);
+	//			kfInfo.rotation.z = static_cast<float>(kf.matTransform.GetQ().mData[2]);
+	//			kfInfo.rotation.w = static_cast<float>(kf.matTransform.GetQ().mData[3]);
+	//			kfInfo.translate.x = static_cast<float>(kf.matTransform.GetT().mData[0]);
+	//			kfInfo.translate.y = static_cast<float>(kf.matTransform.GetT().mData[1]);
+	//			kfInfo.translate.z = static_cast<float>(kf.matTransform.GetT().mData[2]);
+	//			kfInfo.matTransform = GetMatrix(kf.matTransform);
+	//		}
+	//	}
 
-		m_animClips.push_back(info);
-	}
+	//	m_animClips.push_back(info);
+	//}
 
-	// bone info
-	vector<shared_ptr<FbxBoneInfo>>& bones = loader.GetBones();
-	for (shared_ptr<FbxBoneInfo>& bone : bones)
-	{
-		BoneInfo boneInfo = {};
-		boneInfo.parentIdx = bone->parentIndex;
-		boneInfo.matOffset = GetMatrix(bone->matOffset);
-		boneInfo.boneName = bone->boneName;
-		m_bones.push_back(boneInfo);
-	}
+	//// bone info
+	//vector<shared_ptr<FbxBoneInfo>>& bones = loader.GetBones();
+	//for (shared_ptr<FbxBoneInfo>& bone : bones)
+	//{
+	//	BoneInfo boneInfo = {};
+	//	boneInfo.parentIdx = bone->parentIndex;
+	//	boneInfo.matOffset = GetMatrix(bone->matOffset);
+	//	boneInfo.boneName = bone->boneName;
+	//	m_bones.push_back(boneInfo);
+	//}
 
-	// Animation Frame Buffer
-	// BoneOffet 행렬
-	const UINT boneCount = static_cast<UINT>(m_bones.size());
-	vector<XMFLOAT4X4> offsetVec(boneCount);
+	//// Animation Frame Buffer
+	//// BoneOffet 행렬
+	//const UINT boneCount = static_cast<UINT>(m_bones.size());
+	//vector<XMFLOAT4X4> offsetVec(boneCount);
 
-	// Bome Transform 행렬
-	for (int b = 0; b < boneCount; b++)
-	{
-		offsetVec[b] = m_bones[b].matOffset;
+	//// Bome Transform 행렬
+	//for (int b = 0; b < boneCount; b++)
+	//{
+	//	offsetVec[b] = m_bones[b].matOffset;
 
-		// BoneTransforms 초기화
-		m_CbAnimData.BoneTransforms[b] = offsetVec[b];
-	}
+	//	// BoneTransforms 초기화
+	//	m_CbAnimData.BoneTransforms[b] = offsetVec[b];
+	//}
 }
 
 XMFLOAT4X4 Dragon::GetMatrix(FbxAMatrix& mat)

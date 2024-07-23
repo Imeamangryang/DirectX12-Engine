@@ -4,6 +4,8 @@
 #include "Camera.h"
 #include "Cube.h"
 #include "ImGuiLoader.h"
+#include "Dragon.h"
+
 using namespace graphics;
 
 #define SPEED 1000.0f
@@ -46,4 +48,5 @@ private:
 	ImGuiLoader m_imguiLoader;
 
 	Cube m_cube;
+	Dragon m_dragon;
 };

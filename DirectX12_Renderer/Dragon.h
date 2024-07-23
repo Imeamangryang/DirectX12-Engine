@@ -51,7 +51,6 @@ public:
 
 private:
 	void InitPipeline(Graphics* Renderer);
-	void InitPipelineWireframe(Graphics* Renderer);
 
 	void CreateDescriptorHeap(Graphics* Renderer);
 

@@ -21,6 +21,11 @@ public:
 
 	void SetIsWireframe(bool isWireframe) { this->isWireframe = isWireframe; }
 
+	int m_edgetesFactor1 = 1;
+	int m_edgetesFactor2 = 1;
+	int m_edgetesFactor3 = 1;
+	int m_insidetesFactor = 1;
+
 private:
 	void CreateDescriptorHeap(Graphics* Renderer);
 

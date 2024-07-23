@@ -34,7 +34,8 @@ Scene::Scene(int height, int width, Graphics* renderer) :
 	m_renderer(renderer),
 	m_camera(height, width),
 	m_imguiLoader(renderer),
-	m_cube(renderer)
+	m_cube(renderer),
+	m_dragon(renderer)
 {
 	m_viewport.TopLeftX = 0;
 	m_viewport.TopLeftY = 0;
@@ -97,9 +98,50 @@ void Scene::Draw()
 				ImGui::DragFloat("Scale Y", &m_cube.m_scale_y, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
 				ImGui::DragFloat("Scale Z", &m_cube.m_scale_z, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
 
+				ImGui::InputInt("Edge Tessellation Factor1", &m_cube.m_edgetesFactor1);
+				ImGui::InputInt("Edge Tessellation Factor2", &m_cube.m_edgetesFactor2);
+				ImGui::InputInt("Edge Tessellation Factor3", &m_cube.m_edgetesFactor3);
+				ImGui::InputInt("Inside Tessellation Factor", &m_cube.m_insidetesFactor);
+
 				ImGui::BulletText("Vertex Count : %d", m_cube.m_vertexcount);
 				ImGui::SameLine();
 				ImGui::BulletText("Index Count : %d", m_cube.m_indexcount);
+
+				ImGui::TreePop();
+			}
+			if (ImGui::TreeNode(m_dragon.m_objectname.c_str())) {
+				ImGui::Text("Translation");
+				ImGui::DragFloat("Translation X", &m_dragon.m_translation_x, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Translation Y", &m_dragon.m_translation_y, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Translation Z", &m_dragon.m_translation_z, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::Text("Rotation");
+				ImGui::DragFloat("Rotation X", &m_dragon.m_rotation_x, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Rotation Y", &m_dragon.m_rotation_y, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Rotation Z", &m_dragon.m_rotation_z, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::Text("Scaling");
+				ImGui::DragFloat("Scale X", &m_dragon.m_scale_x, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Scale Y", &m_dragon.m_scale_y, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Scale Z", &m_dragon.m_scale_z, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+
+				ImGui::InputInt("Edge Tessellation Factor1", &m_dragon.m_edgetesFactor1);
+				ImGui::InputInt("Edge Tessellation Factor2", &m_dragon.m_edgetesFactor2);
+				ImGui::InputInt("Edge Tessellation Factor3", &m_dragon.m_edgetesFactor3);
+				ImGui::InputInt("Inside Tessellation Factor", &m_dragon.m_insidetesFactor);
+
+				ImGui::BulletText("Vertex Count : %d", m_dragon.m_vertexcount);
+				ImGui::SameLine();
+				ImGui::BulletText("Index Count : %d", m_dragon.m_indexcount);
+
+				if (ImGui::TreeNode("Bone Tree")) {
+					for (UINT i = 1; i < m_dragon.m_boneInfos.size(); i++)
+					{
+						if (m_dragon.m_boneInfos[i]->parentIndex == 0)
+						{
+							DrawTree(m_dragon.m_boneInfos, i);
+						}
+					}
+					ImGui::TreePop();
+				}
 
 				ImGui::TreePop();
 			}
@@ -118,15 +160,18 @@ void Scene::Draw()
 	if (m_DrawMode == 1)
 	{
 		m_cube.SetIsWireframe(false);
+		m_dragon.SetIsWireframe(false);
 	}
 	else
 	{
 		m_cube.SetIsWireframe(true);
+		m_dragon.SetIsWireframe(true);
 	}
 
 	// Object Draw
 	{
 		m_cube.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		m_dragon.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 	}
 
 	ImGui::Render();
