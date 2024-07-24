@@ -371,20 +371,23 @@ void Dragon::LoadFBXModel(Graphics* Renderer, string path)
 		m_vertexcount += meshInfo.vertices.size();
 		m_indexcount += meshInfo.indices.size();
 
+		CalcAENIndices(meshInfo, tessIndices);
+
 		//meshopt_generateTessellationIndexBuffer(tessIndices.data(), indices.data(), indices.size(), reinterpret_cast<const float*>(vertices.data()), vertices.size(), sizeof(vertices));
 
-		for (UINT i = 0; i < meshInfo.indices.size(); i += 3)
-		{
-			tessIndices.push_back(indices[i + 0]);
-			tessIndices.push_back(indices[i + 1]);
-			tessIndices.push_back(indices[i + 2]);
-			tessIndices.push_back(indices[i + 0]);
-			tessIndices.push_back(indices[i + 1]);
-			tessIndices.push_back(indices[i + 1]);
-			tessIndices.push_back(indices[i + 2]);
-			tessIndices.push_back(indices[i + 2]);
-			tessIndices.push_back(indices[i + 0]);
-		}
+		//for (UINT i = 0; i < meshInfo.indices.size(); i += 3)
+		//{
+		//	tessIndices.push_back(indices[i + 0]);
+		//	tessIndices.push_back(indices[i + 1]);
+		//	tessIndices.push_back(indices[i + 2]);
+		//	tessIndices.push_back(indices[i + 0]);
+		//	tessIndices.push_back(indices[i + 1]);
+		//	tessIndices.push_back(indices[i + 1]);
+		//	tessIndices.push_back(indices[i + 2]);
+		//	tessIndices.push_back(indices[i + 2]);
+		//	tessIndices.push_back(indices[i + 0]);
+		//}
+
 		meshdata.IndexSize = tessIndices.size();
 
 		meshes.push_back(meshdata);
@@ -498,6 +501,99 @@ void Dragon::LoadFBXModel(Graphics* Renderer, string path)
 	//	// BoneTransforms 초기화
 	//	m_CbAnimData.BoneTransforms[b] = offsetVec[b];
 	//}
+}
+
+void Dragon::CalcAENIndices(const FbxMeshInfo& meshinfo, vector<uint32_t>& indices)
+{
+	// 인덱스 버퍼 생성
+	indices.resize(meshinfo.indices.size() * 3);
+
+	for (UINT i = 0; i < meshinfo.indices.size(); i += 3)
+	{
+		indices.push_back(meshinfo.indices[i + 0]);
+		indices.push_back(meshinfo.indices[i + 1]);
+		indices.push_back(meshinfo.indices[i + 2]);
+		indices.push_back(meshinfo.indices[i + 0]);
+		indices.push_back(meshinfo.indices[i + 1]);
+		indices.push_back(meshinfo.indices[i + 1]);
+		indices.push_back(meshinfo.indices[i + 2]);
+		indices.push_back(meshinfo.indices[i + 2]);
+		indices.push_back(meshinfo.indices[i + 0]);
+	}
+
+	struct Edge 
+	{
+		XMFLOAT3 p[2];
+		WORD inx[2];
+
+		bool operator == (const Edge& o) const
+		{
+			if (inx[0] == o.inx[0] && inx[1] == o.inx[1])
+				return true;
+
+			if (Equal(p[0].x, o.p[0].x) && Equal(p[0].y, o.p[0].y) && Equal(p[0].z, o.p[0].z))
+			{
+				if (Equal(p[1].x, o.p[1].x) && Equal(p[1].y, o.p[1].y) && Equal(p[1].z, o.p[1].z))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+	};
+
+	// fill reversed
+	std::vector<Edge> edges(meshinfo.indices.size());
+	for (UINT i = 0; i < meshinfo.indices.size(); i += 3) 
+	{
+		edges[i + 0].p[1] = meshinfo.vertices[meshinfo.indices[i + 0]].Position;
+		edges[i + 0].p[0] = meshinfo.vertices[meshinfo.indices[i + 1]].Position;
+		edges[i + 0].inx[1] = meshinfo.indices[i + 0];
+		edges[i + 0].inx[0] = meshinfo.indices[i + 1];
+
+		edges[i + 1].p[1] = meshinfo.vertices[meshinfo.indices[i + 1]].Position;
+		edges[i + 1].p[0] = meshinfo.vertices[meshinfo.indices[i + 2]].Position;
+		edges[i + 1].inx[1] = meshinfo.indices[i + 1];
+		edges[i + 1].inx[0] = meshinfo.indices[i + 2];
+
+		edges[i + 2].p[1] = meshinfo.vertices[meshinfo.indices[i + 2]].Position;
+		edges[i + 2].p[0] = meshinfo.vertices[meshinfo.indices[i + 0]].Position;
+		edges[i + 2].inx[1] = meshinfo.indices[i + 2];
+		edges[i + 2].inx[0] = meshinfo.indices[i + 0];
+	}
+
+	// compare Edge - Edge
+	for (UINT i = 0, j = 0; i < indices.size(); i += 9, j += 3)
+	{
+		for (std::size_t k = 0; k < 9; ++k)
+		{
+			std::size_t first = k;
+			std::size_t second = k + 1;
+			if (second == 9)
+				second = 0;
+
+			Edge e;
+
+			e.p[0] = meshinfo.vertices[indices[i + first]].Position;
+			e.p[1] = meshinfo.vertices[indices[i + second]].Position;
+			e.inx[0] = indices[i + first];
+			e.inx[1] = indices[i + second];
+
+			for (std::size_t m = 0; m < 3; m++)
+			{
+				if ((j + m) < edges.size() && e == edges[j + m])
+				{
+					indices[i + first] = edges[j + m].inx[0];
+					indices[i + second] = edges[j + m].inx[1];
+				}
+			}
+		}
+	}
+}
+
+bool Dragon::Equal(float f0, float f1)
+{
+	return (std::fabs(f0 - f1) <= std::numeric_limits<float>::epsilon());
 }
 
 XMFLOAT4X4 Dragon::GetMatrix(FbxAMatrix& mat)

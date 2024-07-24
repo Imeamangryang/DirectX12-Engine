@@ -41,6 +41,7 @@ public:
 
 	void SetIsWireframe(bool isWireframe) { this->isWireframe = isWireframe; }
 
+	static bool Equal(float f0, float f1);
 
 	vector<shared_ptr<FbxBoneInfo>> m_boneInfos;
 
@@ -57,9 +58,11 @@ private:
 	void CreateConstantBuffer(Graphics* Renderer);
 
 	void LoadFBXModel(Graphics* Renderer, string path);
-	void UpdateAnimation();
+	
+	void CalcAENIndices(const FbxMeshInfo& meshinfo, vector<uint32_t>& indices);
 
-	KeyFrameInfo InterpolateKeyFrames(const AnimClipInfo& clip, UINT boneIndex, float currentTime);
+
+
 
 	XMFLOAT4X4 GetMatrix(FbxAMatrix& mat);
 
