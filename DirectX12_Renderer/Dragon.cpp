@@ -106,7 +106,7 @@ void Dragon::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 vi
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle2(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_srvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(3, cbvHandle2);
 
-	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST); // describe how to read the vertex buffer.
+	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST); // describe how to read the vertex buffer.
 	//m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // describe how to read the vertex buffer.
 	m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 	m_commandList->IASetIndexBuffer(&m_indexBufferView);
@@ -348,6 +348,9 @@ void Dragon::LoadFBXModel(Graphics* Renderer, string path)
 	std::vector<Vertex> vertices;
 	std::vector<std::uint32_t> indices;
 
+	// 테셀레이션 인덱스 버퍼 생성
+	std::vector<std::uint32_t> tessIndices; // 테셀레이션 인덱스 버퍼는 원래 인덱스 버퍼의 4배 크기
+
 	m_vertexcount = 0;
 	m_indexcount = 0;
 
@@ -368,13 +371,30 @@ void Dragon::LoadFBXModel(Graphics* Renderer, string path)
 		m_vertexcount += meshInfo.vertices.size();
 		m_indexcount += meshInfo.indices.size();
 
+		//meshopt_generateTessellationIndexBuffer(tessIndices.data(), indices.data(), indices.size(), reinterpret_cast<const float*>(vertices.data()), vertices.size(), sizeof(vertices));
+
+		for (UINT i = 0; i < meshInfo.indices.size(); i += 3)
+		{
+			tessIndices.push_back(indices[i + 0]);
+			tessIndices.push_back(indices[i + 1]);
+			tessIndices.push_back(indices[i + 2]);
+			tessIndices.push_back(indices[i + 0]);
+			tessIndices.push_back(indices[i + 1]);
+			tessIndices.push_back(indices[i + 1]);
+			tessIndices.push_back(indices[i + 2]);
+			tessIndices.push_back(indices[i + 2]);
+			tessIndices.push_back(indices[i + 0]);
+		}
+		meshdata.IndexSize = tessIndices.size();
+
 		meshes.push_back(meshdata);
 	}
 
 	m_boneInfos = loader.GetBones();
 
 	const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex);
-	const std::uint32_t ibByteSize = (UINT)indices.size() * sizeof(std::uint32_t);
+	//const std::uint32_t ibByteSize = (UINT)indices.size() * sizeof(std::uint32_t);
+	const std::uint32_t ibByteSize = (UINT)tessIndices.size() * sizeof(std::uint32_t);
 
 	Renderer->CreateCommittedBuffer(m_vertexBuffer, m_vertexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(vbByteSize));
 
@@ -393,7 +413,8 @@ void Dragon::LoadFBXModel(Graphics* Renderer, string path)
 	Renderer->CreateCommittedBuffer(m_indexBuffer, m_indexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(ibByteSize));
 
 	D3D12_SUBRESOURCE_DATA indexData = {};
-	indexData.pData = &indices[0];
+	//indexData.pData = &indices[0];
+	indexData.pData = &tessIndices[0];
 	indexData.RowPitch = ibByteSize;
 	indexData.SlicePitch = ibByteSize;
 

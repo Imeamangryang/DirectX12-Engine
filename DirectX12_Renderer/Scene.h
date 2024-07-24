@@ -47,6 +47,6 @@ private:
 
 	ImGuiLoader m_imguiLoader;
 
-	Cube m_cube;
+	//Cube m_cube;
 	Dragon m_dragon;
 };

@@ -10,4 +10,5 @@
 #include "MathHelper.h"
 #include "WICTextureLoader.h"
 #include "DirectXColors.h"
+#include "meshoptimizer.h"
 

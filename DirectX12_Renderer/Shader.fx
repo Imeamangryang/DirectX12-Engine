@@ -6,6 +6,11 @@ Texture2D<float4> heightmap : register(t2);
 SamplerState dmsampler : register(s0);
 SamplerState cmsampler : register(s1);
 
+float3 ComputeCP(float3 posA, float3 posB, float3 normA)
+{
+    return (2 * posA + posB - (dot((posB - posA), normA) * normA)) / 3.0f;
+}
+
 struct VS_INPUT
 {
     float3 pos : POSITION;
@@ -24,7 +29,7 @@ struct VS_OUTPUT
 
 struct HS_CONTROL_POINT_OUTPUT
 {
-    float3 pos : POSITION;
+    float3 pos[3] : POSITION;
     float3 norm : NORMAL;
     float3 tan : TANGENT;
     float2 tex : TEXCOORD;
@@ -36,15 +41,6 @@ struct HS_CONSTANT_DATA_OUTPUT
     float InsideTessFactor : SV_InsideTessFactor;
     
     // Geometry cubic generated control points
-    float3 f3B210 : POSITION3;
-    float3 f3B120 : POSITION4;
-    
-    float3 f3B021 : POSITION5;
-    float3 f3B012 : POSITION6;
-    
-    float3 f3B102 : POSITION7;
-    float3 f3B201 : POSITION8;
-    
     float3 f3B111 : CENTER;
     
     // Normal quadratic generated control points
@@ -95,7 +91,6 @@ VS_OUTPUT VS(VS_INPUT input)
     output.pos = input.pos;
     
     output.norm = input.norm;
-    //output.norm = normalmap.SampleLevel(dmsampler, input.tex, 0).xyz;
     
     output.tan = input.tan;
     
@@ -106,14 +101,22 @@ VS_OUTPUT VS(VS_INPUT input)
 
 // Hull shader
 HS_CONSTANT_DATA_OUTPUT HS_Constant(
-	InputPatch<VS_OUTPUT, NUM_CONTROL_POINTS> ip)
+	OutputPatch<HS_CONTROL_POINT_OUTPUT, 3> ip)
 {
     HS_CONSTANT_DATA_OUTPUT Output;
     
     // PN 또는 PN-AEN 트라이앵글의 제어점 단계에서 계산
-    float3 f3B003 = ip[0].pos;
-    float3 f3B030 = ip[1].pos;
-    float3 f3B300 = ip[2].pos;
+    float3 B300 = ip[0].pos[0];
+    float3 B210 = ip[0].pos[1];
+    float3 B120 = ip[0].pos[2];
+    
+    float3 B030 = ip[1].pos[0];
+    float3 B021 = ip[1].pos[1];
+    float3 B012 = ip[1].pos[2];
+
+    float3 B003 = ip[2].pos[0];
+    float3 B102 = ip[2].pos[1];
+    float3 B201 = ip[2].pos[2];
     
     // And Normals
     float3 f3N002 = ip[0].norm;
@@ -124,26 +127,19 @@ HS_CONSTANT_DATA_OUTPUT HS_Constant(
     Output.EdgeTessFactor[1] = edgeTessellationFactor2;
     Output.EdgeTessFactor[2] = edgeTessellationFactor3;
     Output.InsideTessFactor = insideTessellationFactor;
-    
-    Output.f3B210 = ((2.0f * f3B003) + f3B030 - (dot((f3B030 - f3B003), f3N002) * f3N002)) / 3.0f;
-    Output.f3B120 = ((2.0f * f3B030) + f3B003 - (dot((f3B003 - f3B030), f3N020) * f3N020)) / 3.0f;
-    Output.f3B021 = ((2.0f * f3B030) + f3B300 - (dot((f3B300 - f3B030), f3N020) * f3N020)) / 3.0f;
-    Output.f3B012 = ((2.0f * f3B300) + f3B030 - (dot((f3B030 - f3B300), f3N200) * f3N200)) / 3.0f;
-    Output.f3B102 = ((2.0f * f3B300) + f3B003 - (dot((f3B003 - f3B300), f3N200) * f3N200)) / 3.0f;
-    Output.f3B201 = ((2.0f * f3B003) + f3B300 - (dot((f3B300 - f3B003), f3N002) * f3N002)) / 3.0f;
 
     // Center Control Point
-    float3 f3E = (Output.f3B210 + Output.f3B120 + Output.f3B021 + Output.f3B012 + Output.f3B102 + Output.f3B201) / 6.0f; // 추가된 제어점의 평균
-    float3 f3V = (f3B003 + f3B030 + f3B300) / 3.0f; // 기존의 제어점의 평균
+    float3 f3E = (B210 + B120 + B021 + B012 + B102 + B201) / 6.0f; // 추가된 제어점의 평균
+    float3 f3V = (B300 + B030 + B003) / 3.0f; // 기존의 제어점의 평균
     
     Output.f3B111 = f3E + ((f3E - f3V) / 2.0f);
     
-    float fV12 = 2.0f * dot(f3B030 - f3B003, f3N002 + f3N020) / dot(f3B030 - f3B003, f3B030 - f3B003);
-    Output.f3N110 = normalize(f3N002 + f3N020 - fV12 * (f3B030 - f3B003));
-    float fV23 = 2.0f * dot(f3B300 - f3B030, f3N020 + f3N200) / dot(f3B300 - f3B030, f3B300 - f3B030);
-    Output.f3N011 = normalize(f3N020 + f3N200 - fV23 * (f3B300 - f3B030));
-    float fV31 = 2.0f * dot(f3B003 - f3B300, f3N200 + f3N002) / dot(f3B003 - f3B300, f3B003 - f3B300);
-    Output.f3N101 = normalize(f3N200 + f3N002 - fV31 * (f3B003 - f3B300));
+    float fV12 = 2.0f * dot(B030 - B300, f3N002 + f3N020) / dot(B030 - B300, B030 - B300);
+    Output.f3N110 = normalize(f3N002 + f3N020 - fV12 * (B030 - B300));
+    float fV23 = 2.0f * dot(B003 - B030, f3N020 + f3N200) / dot(B003 - B030, B003 - B030);
+    Output.f3N011 = normalize(f3N020 + f3N200 - fV23 * (B003 - B030));
+    float fV31 = 2.0f * dot(B300 - B003, f3N200 + f3N002) / dot(B300 - B003, B300 - B003);
+    Output.f3N101 = normalize(f3N200 + f3N002 - fV31 * (B300 - B003));
     
     return Output;
 }
@@ -154,15 +150,29 @@ HS_CONSTANT_DATA_OUTPUT HS_Constant(
 [outputcontrolpoints(3)]
 [patchconstantfunc("HS_Constant")]
 HS_CONTROL_POINT_OUTPUT HS(
-	InputPatch<VS_OUTPUT, NUM_CONTROL_POINTS> ip,
+	InputPatch<VS_OUTPUT, 9> ip,
 	uint i : SV_OutputControlPointID)
 {
     HS_CONTROL_POINT_OUTPUT Output;
     
-    Output.pos = ip[i].pos;
+    const uint NextCPID = i < 2 ? i + 1 : 0; // (i + 1) % 3
+    const uint AdditionalData = 3 + 2 * i;
+    const uint NextAdditionalData = AdditionalData + 1;
+    
+    float3 myCP, otherCP;
+    
+    Output.pos[0] = ip[i].pos;
     Output.norm = ip[i].norm;
     Output.tan = ip[i].tan;
     Output.tex = ip[i].tex;
+    
+    myCP = ComputeCP(ip[i].pos, ip[NextCPID].pos, ip[i].norm);
+    otherCP = ComputeCP(ip[AdditionalData].pos, ip[NextAdditionalData].pos, ip[AdditionalData].norm);
+    Output.pos[1] = (myCP + otherCP) / 2.0f;
+    
+    myCP = ComputeCP(ip[NextCPID].pos, ip[i].pos, ip[NextCPID].norm);
+    otherCP = ComputeCP(ip[NextAdditionalData].pos, ip[AdditionalData].pos, ip[NextAdditionalData].norm);
+    Output.pos[2] = (myCP + otherCP) / 2.0f;
     
     return Output;
 }
@@ -190,44 +200,49 @@ DS_OUTPUT DS(
     float fVV3 = fVV * 3.0f;
     float fWW3 = fWW * 3.0f;
     
-    float3 f3EyePosition = patch[0].pos * fWW * fW +
-                           patch[1].pos * fUU * fU +
-                           patch[2].pos * fVV * fV +
+    float3 f3EyePosition = patch[0].pos[0] * fUU * fU +
+                           patch[1].pos[0] * fVV * fV +
+                           patch[2].pos[0] * fWW * fW +
                            
-                           input.f3B210 * fWW3 * fU +
-                           input.f3B120 * fW * fUU3 +
-                           input.f3B201 * fWW3 * fV +
-                           input.f3B021 * fUU3 * fV +
-                           input.f3B102 * fW * fVV3 +
-                           input.f3B012 * fU * fVV3 +
-    
+                           patch[0].pos[1] * fUU3 * fV +
+                           patch[0].pos[2] * fVV3 * fU +
+                           
+                           patch[1].pos[1] * fVV3 * fW +
+                           patch[1].pos[2] * fWW3 * fV +
+                            
+                           patch[2].pos[1] * fWW3 * fU +
+                           patch[2].pos[2] * fUU3 * fW +
+                           
                            input.f3B111 * 6.0f * fW * fU * fV;
     
     Output.pos = float4(f3EyePosition, 1.0f);
     
     // Compute normal from quadratic control points and barycentric coords
-    float3 f3Normal = patch[0].norm * fWW +
-                      patch[1].norm * fUU +
-                      patch[2].norm * fVV +
-                      input.f3N110 * fW * fU +
-                      input.f3N011 * fU * fV +
-                      input.f3N101 * fW * fV;
+    //float3 f3Normal = patch[0].norm * fWW +
+    //                  patch[1].norm * fUU +
+    //                  patch[2].norm * fVV +
+    //                  input.f3N110 * fW * fU +
+    //                  input.f3N011 * fU * fV +
+    //                  input.f3N101 * fW * fV;
    
-    Output.norm = normalize(f3Normal);
+    //Output.norm = normalize(f3Normal);
+    
+    float3 norm = patch[0].norm * fU + patch[1].norm * fV + patch[2].norm * fW;
+    Output.norm = normalize(norm);
     
     Output.tan = normalize(patch[0].tan.xyz * domain.x + patch[1].tan.xyz * domain.y + patch[2].tan.xyz * domain.z);
 
     Output.tex = float2(patch[0].tex.xy * domain.x + patch[1].tex.xy * domain.y + patch[2].tex.xy * domain.z);
-    
-    float3 norm = normalmap.SampleLevel(dmsampler, Output.tex, 0).xyz;
-    
-    Output.pos.xyz += norm * 0.3f;
    
+    float3 normh = normalmap.SampleLevel(dmsampler, Output.tex, 0).xyz;
+    
+    Output.pos.xyz += normh * 0.3f;
+    
     Output.pos = mul(world, Output.pos);    // Transform to world space
     Output.pos = mul(Output.pos, viewproj); // Transform to homogeneous clip space
     
-    Output.norm = normalize(mul(world, float4(Output.norm, 0.0f)).xyz);
-    Output.norm = normalize(mul(float4(Output.norm, 0.0f), viewproj).xyz);
+    //Output.norm = normalize(mul(world, float4(Output.norm, 0.0f)).xyz);
+    //Output.norm = normalize(mul(float4(Output.norm, 0.0f), viewproj).xyz);
     
     return Output;
 }
