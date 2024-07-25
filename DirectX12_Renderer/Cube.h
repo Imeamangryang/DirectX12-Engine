@@ -4,8 +4,8 @@
 #include "stdafx.h"
 #include "Structures.h"
 #include "Object.h"
-#include "DDSTextureLoader.h"
 #include "DirectionalLight.h"
+#include "Texture.h"
 
 using namespace graphics;
 
@@ -53,4 +53,8 @@ private:
 	XMFLOAT4X4 m_worldTransform;
 
 	DirectionalLight m_light;
+
+	std::unique_ptr<Texture> m_cubeMap;
+	std::unique_ptr<Texture> m_normalMap;
+	std::unique_ptr<Texture> m_heightMap;
 };

@@ -372,7 +372,7 @@ namespace graphics {
 	}
 
 	// Shader Resource View 생성 함수
-	void Graphics::CreateSRV(ID3D12Resource*& texture, D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, D3D12_CPU_DESCRIPTOR_HANDLE handle)
+	void Graphics::CreateSRV(ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, D3D12_CPU_DESCRIPTOR_HANDLE handle)
 	{
 		m_device->CreateShaderResourceView(texture, srvDesc, handle);
 	}

@@ -161,5 +161,5 @@ float4 PS(DS_OUTPUT input) : SV_TARGET
     float4 specular = color * 0.1f * light.spec * pow(max(dot(V, toEye), 0.0f), 1.0f);
     
     //return saturate(ambient + diffuse + specular);
-    return saturate(heightmap.SampleLevel(cmsampler, input.tex, 0));
+    return saturate(normalmap.SampleLevel(cmsampler, input.tex, 0));
 }

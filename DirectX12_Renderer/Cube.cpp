@@ -15,8 +15,6 @@ m_indexBuffer(nullptr),
 m_indexBufferUpload(nullptr),
 m_worldTransform(MathHelper::Identity4x4())
 {
-	CreateDescriptorHeap(renderer);
-
 	InitPipeline(renderer);
 
 	LoadMesh(renderer);
@@ -99,14 +97,9 @@ void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
 	m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
-	CD3DX12_GPU_DESCRIPTOR_HANDLE srvhandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart());
-	m_commandList->SetGraphicsRootDescriptorTable(0, srvhandle);
-	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 1, m_srvDescSize);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_srvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
-	CD3DX12_GPU_DESCRIPTOR_HANDLE srvhandle2(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 2, m_srvDescSize);
-	m_commandList->SetGraphicsRootDescriptorTable(2, srvhandle2);
-	CD3DX12_GPU_DESCRIPTOR_HANDLE srvhandle3(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_srvDescSize);
-	m_commandList->SetGraphicsRootDescriptorTable(3, srvhandle3);
+	m_commandList->SetGraphicsRootDescriptorTable(0, m_cubeMap->GetGPUHandle()); // t0 : CubeMap , t1 : NormalMap, t2 : HeightMap
 
 	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST); // describe how to read the vertex buffer.
 	m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
@@ -138,61 +131,17 @@ void Cube::CreateDescriptorHeap(Graphics* Renderer)
 {
 	// Discriptor Heap 생성
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = 5;
+	srvHeapDesc.NumDescriptors = 4;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	Renderer->CreateDescriptorHeap(&srvHeapDesc, m_srvHeap);
 
 	m_srvDescSize = Renderer->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-	// CubeMap 생성
-	std::unique_ptr<uint8_t[]> CubeMapdecodeData;
-	ID3D12Resource* CubeMap;
-	std::vector<D3D12_SUBRESOURCE_DATA> CubeMapSubresources;
-
-	LoadDDSTextureFromFile(Renderer->GetDevice().Get(), L"resource/tile.dds", &CubeMap, CubeMapdecodeData, CubeMapSubresources);
-
-	// Normal Map 생성
-	std::unique_ptr<uint8_t[]> NormalMapdecodeData;
-	ID3D12Resource* NormalMap;
-	D3D12_SUBRESOURCE_DATA NormalMapSubresources;
-
-	LoadWICTextureFromFileEx(Renderer->GetDevice().Get(), L"resource/tile_normal.png", 0, D3D12_RESOURCE_FLAG_NONE, WIC_LOADER_FORCE_RGBA32, &NormalMap, NormalMapdecodeData, NormalMapSubresources);
-
-	// Height Map 생성
-	std::unique_ptr<uint8_t[]> HeightMapdecodeData;
-	ID3D12Resource* HeightMap;
-	D3D12_SUBRESOURCE_DATA HeightMapSubresources;
-
-	LoadWICTextureFromFileEx(Renderer->GetDevice().Get(), L"resource/tile_height.png", 0, D3D12_RESOURCE_FLAG_NONE, WIC_LOADER_FORCE_RGBA32, &HeightMap, HeightMapdecodeData, HeightMapSubresources);
-
-	const UINT64 CubeMapSize = GetRequiredIntermediateSize(CubeMap, 0, static_cast<UINT>(CubeMapSubresources.size()));
-	const UINT64 NormalMapSize = GetRequiredIntermediateSize(NormalMap, 0, 1);
-	const UINT64 HeightMapSize = GetRequiredIntermediateSize(HeightMap, 0, 1);
-
-	Renderer->GetDevice()->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(CubeMapSize + NormalMapSize + HeightMapSize),
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS(&m_uploadHeap));
-
-	// color map, normal map, height map을 업로드 힙에 복사
-	UpdateSubresources(Renderer->GetCommandList().Get(), CubeMap, m_uploadHeap, 0, 0, static_cast<UINT>(CubeMapSubresources.size()), CubeMapSubresources.data());
-
-	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(CubeMap, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-	CD3DX12_CPU_DESCRIPTOR_HANDLE handleSRV(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 0, m_srvDescSize); // SRV Heap의 첫번째 항목
-
-	D3D12_SHADER_RESOURCE_VIEW_DESC	srvDesc = {};
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Format = CubeMap->GetDesc().Format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = CubeMap->GetDesc().MipLevels;
-	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-
-	Renderer->CreateSRV(CubeMap, &srvDesc, handleSRV);
+	// Texture 로딩
+	m_cubeMap = std::make_unique<Texture>(Renderer, m_srvHeap, L"resource/tile.dds", 0);
+	m_normalMap = std::make_unique<Texture>(Renderer, m_srvHeap, L"resource/tile_normal.png", 1);
+	m_heightMap = std::make_unique<Texture>(Renderer, m_srvHeap, L"resource/tile_height.png", 2);
 
 	// ConstantBuffer 생성
 	UINT64 bufferSize = sizeof(ConstantBuffer);
@@ -204,7 +153,7 @@ void Cube::CreateDescriptorHeap(Graphics* Renderer)
 	cbvDesc.BufferLocation = m_CBV->GetGPUVirtualAddress();
 	cbvDesc.SizeInBytes = (bufferSize + 255) & ~255; // Constant Buffer는 256 byte aligned
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 1, m_srvDescSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 3, m_srvDescSize);
 
 	Renderer->CreateCBV(&cbvDesc, srvHandle);
 
@@ -216,50 +165,22 @@ void Cube::CreateDescriptorHeap(Graphics* Renderer)
 	{
 		throw (GFX_Exception("Failed to map CBV in Cube."));
 	}
-
-
-	UpdateSubresources(Renderer->GetCommandList().Get(), NormalMap, m_uploadHeap, CubeMapSize, 0, 1, &NormalMapSubresources);
-
-	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(NormalMap, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-	handleSRV.Offset(2, m_srvDescSize); // SRV Heap의 두번째 항목
-
-	srvDesc.Format = NormalMap->GetDesc().Format;
-	srvDesc.Texture2D.MipLevels = NormalMap->GetDesc().MipLevels;
-
-	Renderer->CreateSRV(NormalMap, &srvDesc, handleSRV);
-
-	UpdateSubresources(Renderer->GetCommandList().Get(), HeightMap, m_uploadHeap, CubeMapSize + NormalMapSize, 0, 1, &HeightMapSubresources);
-
-	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(HeightMap, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-	handleSRV.Offset(2, m_srvDescSize); // SRV Heap의 세번째 항목
-
-	srvDesc.Format = HeightMap->GetDesc().Format;
-	srvDesc.Texture2D.MipLevels = HeightMap->GetDesc().MipLevels;
-
-	Renderer->CreateSRV(HeightMap, &srvDesc, handleSRV);
-
 }
 
 void Cube::InitPipeline(Graphics* Renderer)
 {
+	CreateDescriptorHeap(Renderer);
+
 	// Root Signature 생성
-	CD3DX12_DESCRIPTOR_RANGE range[4];
-	CD3DX12_ROOT_PARAMETER paramsRoot[4];
+	CD3DX12_DESCRIPTOR_RANGE range[2];
+	CD3DX12_ROOT_PARAMETER paramsRoot[2];
 	// Slot : Displacement Map, Register(t0)
-	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND); // t0, t1, t2
 	paramsRoot[0].InitAsDescriptorTable(1, &range[0], D3D12_SHADER_VISIBILITY_ALL);
 
 	// ConstantBufferview를 위한 Root Parameter
 	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 	paramsRoot[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_ALL);
-
-	// Slot : Normal Map, Register(t1)
-	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
-	paramsRoot[2].InitAsDescriptorTable(1, &range[2], D3D12_SHADER_VISIBILITY_ALL);
-
-	// Slot : Height Map, Register(t2)
-	range[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
-	paramsRoot[3].InitAsDescriptorTable(1, &range[3], D3D12_SHADER_VISIBILITY_ALL);
 
 	CD3DX12_STATIC_SAMPLER_DESC descSamplers[2];
 	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);

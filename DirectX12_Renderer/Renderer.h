@@ -42,7 +42,7 @@ namespace graphics {
 		void createRootSignature(CD3DX12_ROOT_SIGNATURE_DESC* rootDesc, ComPtr<ID3D12RootSignature>& rootSignature);
 		void createPSO(D3D12_GRAPHICS_PIPELINE_STATE_DESC* psoDesc, ComPtr<ID3D12PipelineState>& pipelineState);
 		void CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_DESC* heapDesc, ComPtr<ID3D12DescriptorHeap>& heap);
-		void CreateSRV(ID3D12Resource*& texture, D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, D3D12_CPU_DESCRIPTOR_HANDLE handle);
+		void CreateSRV(ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, D3D12_CPU_DESCRIPTOR_HANDLE handle);
 		void CreateCBV(D3D12_CONSTANT_BUFFER_VIEW_DESC* desc, D3D12_CPU_DESCRIPTOR_HANDLE handle);
 		void CreateBuffer(ID3D12Resource*& buffer, D3D12_RESOURCE_DESC* texDesc);
 		void CreateDefaultBuffer(ID3D12Resource*& buffer, D3D12_RESOURCE_DESC* texDesc);

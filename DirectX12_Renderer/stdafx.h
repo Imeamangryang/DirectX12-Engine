@@ -9,5 +9,6 @@
 #include "imgui/imgui_impl_win32.h"
 #include "MathHelper.h"
 #include "WICTextureLoader.h"
+#include "DDSTextureLoader.h"
 #include "DirectXColors.h"
-
+#include "Renderer.h"
