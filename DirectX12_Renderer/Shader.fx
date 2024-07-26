@@ -136,12 +136,14 @@ DS_OUTPUT DS(
     Output.tex = float2(patch[0].tex.xy * domain.x + patch[1].tex.xy * domain.y + patch[2].tex.xy * domain.z);
     
     //Output.norm += normalmap.SampleLevel(dmsampler, Output.tex, 0).xyz;
-    float height = heightmap.SampleLevel(dmsampler, Output.tex.xy, 0).r;
+    //float height = heightmap.SampleLevel(dmsampler, Output.tex.xy, 0).r;
     
-    Output.pos.xyz += Output.norm * height;
+    //Output.pos.xyz += Output.norm * height;
     
     Output.pos = mul(world, Output.pos);
     Output.pos = mul(Output.pos, viewproj);
+    
+    Output.norm = mul((float3x3)world, Output.norm);
     
     return Output;
 }
@@ -149,17 +151,22 @@ DS_OUTPUT DS(
 // Pixel shader
 float4 PS(DS_OUTPUT input) : SV_TARGET
 {
-    float3 norm = normalmap.Sample(cmsampler, input.tex).xyz;
+    
+    float3 norm = normalmap.Sample(cmsampler, input.tex).xyz + input.norm;
     norm = normalize(norm);
     
     float4 color = float4(colormap.Sample(cmsampler, input.tex));
     
-    float4 ambient = color * light.amb;
-    float4 diffuse = color * light.dif * dot(-light.dir, norm);
-    float3 V = reflect(light.dir, norm);
-    float3 toEye = normalize(eye.xyz - input.pos.xyz);
-    float4 specular = color * 0.1f * light.spec * pow(max(dot(V, toEye), 0.0f), 1.0f);
+    // World space에서의 light pos와 dir 계산
+    float3 worldlightpos = mul(light.pos, world).xyz;
+    float3 lightDir = normalize(input.pos.xyz - worldlightpos);
     
-    //return saturate(ambient + diffuse + specular);
-    return saturate(normalmap.SampleLevel(cmsampler, input.tex, 0));
+    float4 ambient = light.amb;
+    float4 diffuse = light.dif * dot(-lightDir, norm);
+    float3 V = reflect(lightDir, norm);
+    float3 toEye = normalize(eye.xyz - input.pos.xyz);
+    float4 specular = 0.1f * light.spec * pow(max(dot(V, toEye), 0.0f), 4.0f);
+    
+    return float4(saturate((ambient + diffuse + specular).rgb * color.rgb), color.a);
+    //return saturate(normalmap.SampleLevel(cmsampler, input.tex, 0));
 }

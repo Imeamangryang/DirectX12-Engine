@@ -139,7 +139,7 @@ void Cube::CreateDescriptorHeap(Graphics* Renderer)
 	m_srvDescSize = Renderer->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	// Texture ·Îµù
-	m_cubeMap = std::make_unique<Texture>(Renderer, m_srvHeap, L"resource/tile.dds", 0);
+	m_cubeMap = std::make_unique<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/dirt.png", 0);
 	m_normalMap = std::make_unique<Texture>(Renderer, m_srvHeap, L"resource/tile_normal.png", 1);
 	m_heightMap = std::make_unique<Texture>(Renderer, m_srvHeap, L"resource/tile_height.png", 2);
 
@@ -184,7 +184,7 @@ void Cube::InitPipeline(Graphics* Renderer)
 
 	CD3DX12_STATIC_SAMPLER_DESC descSamplers[2];
 	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
-	descSamplers[1].Init(1, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+	descSamplers[1].Init(1, D3D12_FILTER_MIN_MAG_MIP_POINT);
 
 	CD3DX12_ROOT_SIGNATURE_DESC rootDesc;
 	rootDesc.Init(

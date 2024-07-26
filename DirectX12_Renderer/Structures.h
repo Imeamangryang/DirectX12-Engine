@@ -163,3 +163,11 @@ struct CharacterConstantBuffer
 
 	XMFLOAT4X4 BoneTransforms[96];
 };
+
+enum class BlockType {
+	Air,
+	Dirt,
+	Stone,
+	Cobblestone,
+	Oak_planks
+};

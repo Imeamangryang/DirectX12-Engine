@@ -6,9 +6,9 @@ using namespace std;
 using namespace graphics;
 using namespace window;
 
-static const LPCWSTR	appName = L"Directx 12 Moon Renderer";
-static const int		WINDOW_HEIGHT = 540;
-static const int		WINDOW_WIDTH = 960;
+static const LPCWSTR	appName = L"Directx 12 Renderer";
+static const int		WINDOW_HEIGHT = 1080;
+static const int		WINDOW_WIDTH = 1920;
 static const bool		FULL_SCREEN = false;
 
 static Scene* pScene = nullptr;
