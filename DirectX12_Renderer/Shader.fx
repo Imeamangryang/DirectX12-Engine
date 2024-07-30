@@ -12,6 +12,7 @@ struct VS_INPUT
     float3 norm : NORMAL;
     float3 tan : TANGENT;
     float2 tex : TEXCOORD;
+    uint instanceID : SV_InstanceID;
 };
 
 struct VS_OUTPUT
@@ -20,6 +21,7 @@ struct VS_OUTPUT
     float3 norm : NORMAL;
     float3 tan : TANGENT;
     float2 tex : TEXCOORD;
+    uint instanceID : SV_InstanceID;
 };
 
 struct HS_CONTROL_POINT_OUTPUT
@@ -28,6 +30,7 @@ struct HS_CONTROL_POINT_OUTPUT
     float3 norm : NORMAL;
     float3 tan : TANGENT;
     float2 tex : TEXCOORD;
+    uint instanceID : SV_InstanceID;
 };
 
 struct HS_CONSTANT_DATA_OUTPUT
@@ -42,6 +45,7 @@ struct DS_OUTPUT
     float3 norm : NORMAL;
     float3 tan : TANGENT;
     float2 tex : TEXCOORD;
+    uint instanceID : SV_InstanceID;
 };
 
 struct LightData
@@ -65,18 +69,30 @@ cbuffer ConstantBuffer : register(b0)
     int blocktype;
 }
 
+struct InstanceBuffer
+{
+    float4x4 instanceTrans;
+};
+
+StructuredBuffer<InstanceBuffer> instanceTransforms : register(t3); // 인스턴스 변환 행렬
+
 // Vertex shader
 VS_OUTPUT VS(VS_INPUT input)
 {
     VS_OUTPUT output;
     
+    
+    
     output.pos = float4(input.pos, 1.0f);
+    output.pos += mul(instanceTransforms[input.instanceID].instanceTrans, output.pos);
     
     output.norm = input.norm;
     
     output.tan = input.tan;
     
     output.tex = input.tex;
+    
+    output.instanceID = input.instanceID;
 
     return output;
 }
@@ -112,6 +128,7 @@ HS_CONTROL_POINT_OUTPUT HS(
     Output.norm = ip[i].norm;
     Output.tan = ip[i].tan;
     Output.tex = ip[i].tex;
+    Output.instanceID = ip[i].instanceID;
 
     return Output;
 }
@@ -138,7 +155,7 @@ DS_OUTPUT DS(
     //float height = heightmap.SampleLevel(dmsampler, Output.tex.xy, 0).r;
     
     //Output.pos.xyz += Output.norm * height;
-    
+ 
     Output.pos = mul(world, Output.pos);
     Output.pos = mul(Output.pos, viewproj);
     

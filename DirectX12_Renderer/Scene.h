@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "Cube.h"
 #include "ImGuiLoader.h"
+#include "Chunk.h"
 
 using namespace graphics;
 
@@ -48,4 +49,5 @@ private:
 	ImGuiLoader m_imguiLoader;
 
 	Cube m_cube;
+	Chunk m_chunk;
 };

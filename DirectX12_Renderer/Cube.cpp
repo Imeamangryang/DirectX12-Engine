@@ -17,7 +17,7 @@ Cube::~Cube()
 {
 }
 
-void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye)
+void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye, UINT instanceCount)
 {
 	if (isWireframe == false) {
 		m_commandList->SetPipelineState(m_pipelineState.Get());
@@ -50,19 +50,22 @@ void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_srvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
 	m_commandList->SetGraphicsRootDescriptorTable(0, m_cubeMap->GetGPUHandle()); // t0 : CubeMap , t1 : NormalMap, t2 : HeightMap
+	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_srvDescSize);
+	m_commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
+
 
 	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST); // describe how to read the vertex buffer.
 	m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 	m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
-	m_commandList->DrawIndexedInstanced(m_indexcount, 1, 0, 0, 0);
+	m_commandList->DrawIndexedInstanced(m_indexcount, instanceCount, 0, 0, 0);
 }
 
 void Cube::CreateDescriptorHeap(Graphics* Renderer)
 {
 	// Discriptor Heap 생성
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = 4;
+	srvHeapDesc.NumDescriptors = 10;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	Renderer->CreateDescriptorHeap(&srvHeapDesc, m_srvHeap);
@@ -70,9 +73,9 @@ void Cube::CreateDescriptorHeap(Graphics* Renderer)
 	m_srvDescSize = Renderer->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	// Texture 로딩
-	m_cubeMap = std::make_unique<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/dirt.png", 0);
-	m_normalMap = std::make_unique<Texture>(Renderer, m_srvHeap, L"resource/tile_normal.png", 1);
-	m_heightMap = std::make_unique<Texture>(Renderer, m_srvHeap, L"resource/tile_height.png", 2);
+	m_cubeMap = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/dirt.png", 0);
+	m_normalMap = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/tile_normal.png", 1);
+	m_heightMap = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/tile_height.png", 2);
 
 	// ConstantBuffer 생성
 	UINT64 bufferSize = sizeof(ConstantBuffer);
@@ -103,15 +106,19 @@ void Cube::InitPipeline(Graphics* Renderer)
 	CreateDescriptorHeap(Renderer);
 
 	// Root Signature 생성
-	CD3DX12_DESCRIPTOR_RANGE range[2];
-	CD3DX12_ROOT_PARAMETER paramsRoot[2];
+	CD3DX12_DESCRIPTOR_RANGE range[3];
+	CD3DX12_ROOT_PARAMETER paramsRoot[3];
 	// Slot : Displacement Map, Register(t0)
 	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND); // t0, t1, t2
 	paramsRoot[0].InitAsDescriptorTable(1, &range[0], D3D12_SHADER_VISIBILITY_ALL);
 
 	// ConstantBufferview를 위한 Root Parameter
-	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0); // b0
 	paramsRoot[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_ALL);
+
+	// InstanceBufferView를 위한 Root Parameter
+	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3); // t3
+	paramsRoot[2].InitAsDescriptorTable(1, &range[2], D3D12_SHADER_VISIBILITY_ALL);
 
 	CD3DX12_STATIC_SAMPLER_DESC descSamplers[2];
 	descSamplers[0].Init(0, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
@@ -145,6 +152,7 @@ void Cube::InitPipeline(Graphics* Renderer)
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "SV_InstanceID", 0, DXGI_FORMAT_R32_UINT, 1, 0, D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA, 1 }
 	};
 
 	D3D12_INPUT_LAYOUT_DESC	inputLayoutDesc = {};
@@ -274,4 +282,51 @@ void Cube::LoadMesh(Graphics* Renderer)
 	m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
 	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	m_indexBufferView.SizeInBytes = ibByteSize;
+}
+
+void Cube::CreateInstanceBuffer(Graphics* renderer, const std::vector<InstanceBuffer>& instanceData)
+{
+	// 인스턴스 데이터 크기 계산
+	UINT64 instanceBufferSize = sizeof(InstanceBuffer) * instanceData.size();
+
+	// 업로드 버퍼 생성
+	ComPtr<ID3D12Resource> instanceBufferUpload;
+	renderer->CreateCommittedBuffer(m_StructuredBuffer, instanceBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(instanceBufferSize));
+	m_StructuredBuffer->SetName(L"InstanceBuffer");
+
+	// 데이터 복사
+	D3D12_SUBRESOURCE_DATA instanceDataDesc = {};
+	instanceDataDesc.pData = instanceData.data();
+	instanceDataDesc.RowPitch = instanceBufferSize;
+	instanceDataDesc.SlicePitch = instanceBufferSize;
+
+	UpdateSubresources(renderer->GetCommandList().Get(), m_StructuredBuffer.Get(), instanceBufferUpload.Get(), 0, 0, 1, &instanceDataDesc);
+
+	//// 데이터 복사
+	//UINT64* pMappedData = nullptr;
+	//CD3DX12_RANGE readRange(0, 0); // 읽기 범위는 0으로 설정
+	//if (FAILED(instanceBufferUpload->Map(0, &readRange, reinterpret_cast<void**>(&pMappedData))))
+	//{
+	//	throw std::runtime_error("Failed to map instance buffer upload resource.");
+	//}
+	//memcpy(pMappedData, instanceData.data(), instanceBufferSize);
+	//instanceBufferUpload->Unmap(0, nullptr);
+
+	// 리소스 배리어 설정	
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_StructuredBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
+	renderer->GetCommandList()->ResourceBarrier(1, &barrier);
+
+	// SRV 생성
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Buffer.FirstElement = 0;
+	srvDesc.Buffer.NumElements = static_cast<UINT>(instanceData.size());
+	srvDesc.Buffer.StructureByteStride = sizeof(InstanceBuffer);
+	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandleInstance(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 4, m_srvDescSize);
+
+	renderer->CreateSRV(m_StructuredBuffer.Get(), &srvDesc, srvHandleInstance);
 }

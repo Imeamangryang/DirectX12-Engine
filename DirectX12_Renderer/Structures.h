@@ -170,3 +170,8 @@ struct CharacterConstantBuffer
 
 	XMFLOAT4X4 BoneTransforms[96];
 };
+
+struct InstanceBuffer
+{
+	XMFLOAT4X4 world;
+};

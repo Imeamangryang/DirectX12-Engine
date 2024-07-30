@@ -42,9 +42,9 @@ static void HandleMouseMove(LPARAM lp) {
 	lastMouseY = y;
 }
 
-static LRESULT CALLBACK WndProc(HWND win , UINT msg, WPARAM wp, LPARAM lp) {
+static LRESULT CALLBACK WndProc(HWND win, UINT msg, WPARAM wp, LPARAM lp) {
 	extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	if (ImGui_ImplWin32_WndProcHandler(win, msg, wp, lp)) { 
+	if (ImGui_ImplWin32_WndProcHandler(win, msg, wp, lp)) {
 		return true;
 	}
 	else {
@@ -58,16 +58,16 @@ static LRESULT CALLBACK WndProc(HWND win , UINT msg, WPARAM wp, LPARAM lp) {
 		case WM_CLOSE:
 			DestroyWindow(win);
 			return 0;
-			
-        case WM_MOUSEMOVE:
-            if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_AnyWindow) && (wp & MK_RBUTTON)) {
-                HandleMouseMove(lp);
-            }
+
+		case WM_MOUSEMOVE:
+			if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_AnyWindow) && (wp & MK_RBUTTON)) {
+				HandleMouseMove(lp);
+			}
 			else {
 				lastMouseX = GET_X_LPARAM(lp);
 				lastMouseY = GET_Y_LPARAM(lp);
 			}
-            break;
+			break;
 
 		case WM_KEYDOWN:
 			switch (wp)
@@ -164,7 +164,7 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In
 		Graphics Renderer(WIN.Height(), WIN.Width(), WIN.GetWindow(), FULL_SCREEN);
 		Scene MainScene(WIN.Height(), WIN.Width(), &Renderer);
 		pScene = &MainScene;
-	
+
 		MSG msg;
 		ZeroMemory(&msg, sizeof(MSG));
 
@@ -172,8 +172,8 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In
 			if (PeekMessage(&msg, WIN.GetWindow(), 0, 0, PM_REMOVE)) {
 				TranslateMessage(&msg);
 				DispatchMessage(&msg);
-			} 
-			if (msg.message == WM_QUIT) { 
+			}
+			if (msg.message == WM_QUIT) {
 				pScene = nullptr;
 				return 1;
 			}
@@ -192,11 +192,13 @@ int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In
 
 		pScene = nullptr;
 		return 2;
-	} catch (GFX_Exception& e) {
+	}
+	catch (GFX_Exception& e) {
 		OutputDebugStringA(e.what());
 		pScene = nullptr;
 		return 3;
-	} catch (Window_Exception& e) {
+	}
+	catch (Window_Exception& e) {
 		OutputDebugStringA(e.what());
 		pScene = nullptr;
 		return 4;

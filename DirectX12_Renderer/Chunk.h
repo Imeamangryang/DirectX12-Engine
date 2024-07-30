@@ -20,11 +20,8 @@ public:
 	void GenerateChunk();
 	void Draw(ComPtr<ID3D12GraphicsCommandList>& m_commandList, XMFLOAT4X4& viewproj, XMFLOAT4& eye);
 
-	void ClearUnusedUploadBuffersAfterInit();
-
-	
 private:
-	std::vector<std::pair<BlockType, XMFLOAT3>> m_blocks;
-	Block m_block;
+	std::vector<Cube> m_blocks;
+	Cube m_block;
 	Graphics* m_renderer;
 };

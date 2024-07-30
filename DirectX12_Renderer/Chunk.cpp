@@ -1,9 +1,10 @@
 #include "Chunk.h"
 
 Chunk::Chunk(Graphics* renderer) :
-	m_block(0, 0, 0, BlockType::Stone, renderer)
+	m_block(renderer)
 {
 	m_renderer = renderer;
+	GenerateChunk();
 }
 
 Chunk::~Chunk()
@@ -17,34 +18,27 @@ BlockType Chunk::GetBlock(int x, int y, int z) const
 
 void Chunk::GenerateChunk()
 {
+	std::vector<InstanceBuffer> instanceData;
+	InstanceBuffer data;
 	for (int x = 0; x < CHUNK_SIZE; x++)
 	{
 		for (int y = 0; y < CHUNK_SIZE; y++)
 		{
 			for (int z = 0; z < 1; z++)
 			{
-				m_blocks.push_back(std::make_pair(BlockType::Stone, XMFLOAT3(x, y, z)));
+				XMFLOAT4X4 world = MathHelper::Identity4x4();
+				XMStoreFloat4x4(&world, XMMatrixTranslation(x * 2.0f, y * 2.0f, z * 2.0f));
+				data.world = world;
+				instanceData.push_back(data);
 			}
 		}
 	}
+	m_block.CreateInstanceBuffer(m_renderer, instanceData);
 }
 
 void Chunk::Draw(ComPtr<ID3D12GraphicsCommandList>& m_commandList, XMFLOAT4X4& viewproj, XMFLOAT4& eye)
 {
-	for(auto& block : m_blocks)
-	{
-		//XMFLOAT4X4 world = MathHelper::Identity4x4();
-		//XMStoreFloat4x4(&world, XMMatrixTranslation(block.second.x, block.second.y, block.second.z));
-		//m_block.SetWorldTransform(world);
-		//m_block.SetBlockType(block.first);
-		
-	}
-	m_block.Draw(m_commandList, viewproj, eye);
-}
-
-void Chunk::ClearUnusedUploadBuffersAfterInit()
-{
-	m_block.ClearUnusedUploadBuffersAfterInit();
+	m_block.Draw(m_commandList, viewproj, eye, CHUNK_SIZE * CHUNK_SIZE);
 }
 
 

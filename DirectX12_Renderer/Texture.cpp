@@ -7,10 +7,6 @@ Texture::Texture(Graphics* renderer, ComPtr<ID3D12DescriptorHeap> descriptorHeap
 
 Texture::~Texture()
 {
-    if (m_uploadHeap) {
-        m_uploadHeap->Release();
-        m_uploadHeap = nullptr;
-    }
 }
 
 void Texture::LoadTexture(Graphics* renderer, ComPtr<ID3D12DescriptorHeap> descriptorHeap, const std::wstring& filePath, const size_t registernum)
