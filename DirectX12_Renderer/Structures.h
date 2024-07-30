@@ -6,14 +6,21 @@ using Microsoft::WRL::ComPtr;
 using namespace DirectX;
 using namespace std;
 
+enum class BlockType {
+	Air,
+	Dirt,
+	Stone,
+	Cobblestone,
+	Oak_planks
+};
+
 struct ConstantBuffer
 {
 	XMFLOAT4X4 world;
 	XMFLOAT4X4 viewproj;
 	XMFLOAT4 eye;
 	LightSource light;
-	UINT height;
-	UINT width;
+	UINT blockType;
 };
 
 struct SkyConstantBuffer
@@ -162,12 +169,4 @@ struct CharacterConstantBuffer
 	int insideTessellationFactor = 1;
 
 	XMFLOAT4X4 BoneTransforms[96];
-};
-
-enum class BlockType {
-	Air,
-	Dirt,
-	Stone,
-	Cobblestone,
-	Oak_planks
 };

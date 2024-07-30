@@ -1,18 +1,6 @@
 #include "Cube.h"
 
 Cube::Cube(Graphics* renderer) : Object(renderer),
-m_pipelineState(nullptr),
-m_rootSignature(nullptr),
-m_srvHeap(nullptr),
-m_uploadHeap(nullptr),
-m_width(0),
-m_height(0),
-m_CBV(nullptr),
-m_cbvDataBegin(nullptr),
-m_vertexBuffer(nullptr),
-m_vertexBufferUpload(nullptr),
-m_indexBuffer(nullptr),
-m_indexBufferUpload(nullptr),
 m_worldTransform(MathHelper::Identity4x4())
 {
 	InitPipeline(renderer);
@@ -27,43 +15,6 @@ m_worldTransform(MathHelper::Identity4x4())
 
 Cube::~Cube()
 {
-	if (m_srvHeap)
-	{
-		m_srvHeap->Release();
-		m_srvHeap = nullptr;
-	}
-	if (m_uploadHeap)
-	{
-		m_uploadHeap->Release();
-		m_uploadHeap = nullptr;
-	}
-	if (m_indexBufferUpload)
-	{
-		m_indexBufferUpload->Release();
-		m_indexBufferUpload = nullptr;
-	}
-	if (m_indexBuffer)
-	{
-		m_indexBuffer->Release();
-		m_indexBuffer = nullptr;
-	}
-	if (m_vertexBufferUpload)
-	{
-		m_vertexBufferUpload->Release();
-		m_vertexBufferUpload = nullptr;
-	}
-	if (m_vertexBuffer)
-	{
-		m_vertexBuffer->Release();
-		m_vertexBuffer = nullptr;
-	}
-	if (m_CBV)
-	{
-		m_CBV->Unmap(0, nullptr);
-		m_cbvDataBegin = nullptr;
-		m_CBV->Release();
-		m_CBV = nullptr;
-	}
 }
 
 void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye)
@@ -90,9 +41,8 @@ void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 	m_constantBufferData.world = m_worldTransform;
 	m_constantBufferData.viewproj = viewproj;
 	m_constantBufferData.eye = eye;
-	m_constantBufferData.height = m_height;
-	m_constantBufferData.width = m_width;
 	m_constantBufferData.light = m_light.GetDirectionalLight();
+	m_constantBufferData.blockType = 0;
 	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
@@ -106,25 +56,6 @@ void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 	m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
 	m_commandList->DrawIndexedInstanced(m_indexcount, 1, 0, 0, 0);
-}
-
-void Cube::ClearUnusedUploadBuffersAfterInit()
-{
-	if (m_uploadHeap)
-	{
-		m_uploadHeap->Release();
-		m_uploadHeap = nullptr;
-	}
-	if (m_indexBufferUpload)
-	{
-		m_indexBufferUpload->Release();
-		m_indexBufferUpload = nullptr;
-	}
-	if (m_vertexBufferUpload)
-	{
-		m_vertexBufferUpload->Release();
-		m_vertexBufferUpload = nullptr;
-	}
 }
 
 void Cube::CreateDescriptorHeap(Graphics* Renderer)
@@ -312,7 +243,7 @@ void Cube::LoadMesh(Graphics* Renderer)
 	m_vertexcount = vertices.size();
 	m_indexcount = indices.size();
 
-	int vbByteSize = sizeof(Vertex) * vertices.size();
+	UINT vbByteSize = sizeof(Vertex) * vertices.size();
 
 	Renderer->CreateCommittedBuffer(m_vertexBuffer, m_vertexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(vbByteSize));
 
@@ -321,14 +252,14 @@ void Cube::LoadMesh(Graphics* Renderer)
 	vertexData.RowPitch = vbByteSize;
 	vertexData.SlicePitch = vbByteSize;
 
-	UpdateSubresources(Renderer->GetCommandList().Get(), m_vertexBuffer, m_vertexBufferUpload, 0, 0, 1, &vertexData);
-	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+	UpdateSubresources(Renderer->GetCommandList().Get(), m_vertexBuffer.Get(), m_vertexBufferUpload.Get(), 0, 0, 1, &vertexData);
+	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
 
 	m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
 	m_vertexBufferView.StrideInBytes = sizeof(Vertex);
 	m_vertexBufferView.SizeInBytes = vbByteSize;
 
-	int ibByteSize = sizeof(UINT) * indices.size();
+	UINT ibByteSize = sizeof(UINT) * indices.size();
 
 	Renderer->CreateCommittedBuffer(m_indexBuffer, m_indexBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(ibByteSize));
 
@@ -337,8 +268,8 @@ void Cube::LoadMesh(Graphics* Renderer)
 	indexData.RowPitch = ibByteSize;
 	indexData.SlicePitch = ibByteSize;
 
-	UpdateSubresources(Renderer->GetCommandList().Get(), m_indexBuffer, m_indexBufferUpload, 0, 0, 1, &indexData);
-	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_indexBuffer, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
+	UpdateSubresources(Renderer->GetCommandList().Get(), m_indexBuffer.Get(), m_indexBufferUpload.Get(), 0, 0, 1, &indexData);
+	Renderer->GetCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER));
 
 	m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
 	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;

@@ -44,11 +44,11 @@ namespace graphics {
 		void CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_DESC* heapDesc, ComPtr<ID3D12DescriptorHeap>& heap);
 		void CreateSRV(ID3D12Resource* texture, D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, D3D12_CPU_DESCRIPTOR_HANDLE handle);
 		void CreateCBV(D3D12_CONSTANT_BUFFER_VIEW_DESC* desc, D3D12_CPU_DESCRIPTOR_HANDLE handle);
-		void CreateBuffer(ID3D12Resource*& buffer, D3D12_RESOURCE_DESC* texDesc);
+		void CreateBuffer(ComPtr<ID3D12Resource>& buffer, D3D12_RESOURCE_DESC* texDesc);
 		void CreateDefaultBuffer(ID3D12Resource*& buffer, D3D12_RESOURCE_DESC* texDesc);
 		void CompileShader(LPCWSTR filename, LPCSTR entryname, D3D12_SHADER_BYTECODE& shaderBytecode, ShaderType shadertype);
 		void LoadAsset();
-		void CreateCommittedBuffer(ID3D12Resource*& buffer, ID3D12Resource*& upload, D3D12_RESOURCE_DESC* texDesc);
+		void CreateCommittedBuffer(ComPtr<ID3D12Resource>& buffer, ComPtr<ID3D12Resource>& upload, D3D12_RESOURCE_DESC* texDesc);
 		void ClearAllFrames();
 
 		ComPtr<ID3D12GraphicsCommandList> GetCommandList() { return m_commandList; }

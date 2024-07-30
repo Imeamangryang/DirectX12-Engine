@@ -12,3 +12,4 @@
 #include "DDSTextureLoader.h"
 #include "DirectXColors.h"
 #include "Renderer.h"
+#include "random"

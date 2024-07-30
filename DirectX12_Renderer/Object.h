@@ -26,22 +26,20 @@ public:
 	float m_scale_y = 1.0f;
 	float m_scale_z = 1.0f;
 
-	UINT m_indexcount;
-	UINT m_vertexcount;
+	size_t m_indexcount;
+	size_t m_vertexcount;
 
 private:
 
 	ComPtr<ID3D12DescriptorHeap> m_srvHeap = nullptr;
-	ID3D12Resource* m_uploadHeap = nullptr;
-	UINT m_width = 0; 
-	UINT m_height = 0;
+	ComPtr<ID3D12Resource> m_uploadHeap = nullptr;
 
 	UINT m_srvDescSize;
 
-	ID3D12Resource* m_vertexBuffer = nullptr;
-	ID3D12Resource* m_vertexBufferUpload = nullptr;
-	ID3D12Resource* m_indexBuffer = nullptr;
-	ID3D12Resource* m_indexBufferUpload = nullptr;
+	ComPtr<ID3D12Resource> m_vertexBuffer = nullptr;
+	ComPtr<ID3D12Resource> m_vertexBufferUpload = nullptr;
+	ComPtr<ID3D12Resource> m_indexBuffer = nullptr;
+	ComPtr<ID3D12Resource> m_indexBufferUpload = nullptr;
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW	m_indexBufferView;
 

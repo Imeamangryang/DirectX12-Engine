@@ -14,12 +14,12 @@ public:
 	~Texture();
 
 	ID3D12Resource* GetTexture() { return m_texture.Get(); }
-	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() { return m_gpuDescriptorHandle; }
+	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle() const { return m_gpuDescriptorHandle; }
 
 private:
 	void LoadTexture(Graphics* renderer, ComPtr<ID3D12DescriptorHeap> descriptorHeap ,const std::wstring& filePath, const size_t registernum);
 
-	ComPtr<ID3D12DescriptorHeap>	m_srvHeap;
+	ComPtr<ID3D12DescriptorHeap> m_srvHeap;
 
 	ComPtr<ID3D12Resource> m_texture;
 	ComPtr<ID3D12Resource> m_uploadHeap;

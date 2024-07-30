@@ -384,7 +384,7 @@ namespace graphics {
 ;	}
 
 	// Buffer 생성 함수
-	void Graphics::CreateBuffer(ID3D12Resource*& buffer, D3D12_RESOURCE_DESC* texDesc)
+	void Graphics::CreateBuffer(ComPtr<ID3D12Resource>& buffer, D3D12_RESOURCE_DESC* texDesc)
 	{
 		if (FAILED(m_device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
@@ -479,7 +479,7 @@ namespace graphics {
 	}
 
 	// 버퍼의 데이터 GPU로 제출하는 함수
-	void Graphics::CreateCommittedBuffer(ID3D12Resource*& buffer, ID3D12Resource*& upload, D3D12_RESOURCE_DESC* texDesc)
+	void Graphics::CreateCommittedBuffer(ComPtr<ID3D12Resource>& buffer, ComPtr<ID3D12Resource>& upload, D3D12_RESOURCE_DESC* texDesc)
 	{
 		if (FAILED(m_device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -492,7 +492,7 @@ namespace graphics {
 			throw GFX_Exception("Failed to create default heap on CreateSRV.");
 		}
 
-		const auto bufferSize = GetRequiredIntermediateSize(buffer, 0, 1);
+		const auto bufferSize = GetRequiredIntermediateSize(buffer.Get(), 0, 1);
 		if (FAILED(m_device->CreateCommittedResource(
 			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
 			D3D12_HEAP_FLAG_NONE,

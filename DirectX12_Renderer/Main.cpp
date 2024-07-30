@@ -27,10 +27,10 @@ static void HandleMouseMove(LPARAM lp) {
 	else { // calculate how far we've moved from the last time we updated and pass that info to the scene.
 		// clamp the values as well so that when we're in windowed mode, we don't cause massive jumps when the
 		// mouse moves out of the window and then back in at a completely different position.
-		float moveX = lastMouseX - x;
+		int moveX = lastMouseX - x;
 		moveX = moveX > 20 ? 20 : moveX;
 		moveX = moveX < -20 ? -20 : moveX;
-		float moveY = lastMouseY - y;
+		int moveY = lastMouseY - y;
 		moveY = moveY > 20 ? 20 : moveY;
 		moveY = moveY < -20 ? -20 : moveY;
 
@@ -150,7 +150,7 @@ static LRESULT CALLBACK WndProc(HWND win , UINT msg, WPARAM wp, LPARAM lp) {
 	return 0;
 }
 
-int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, PSTR cmdLine, int cmdShow) {
+int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ PSTR cmdLine, _In_ int cmdShow) {
 	try {
 		LARGE_INTEGER startTime;
 		LARGE_INTEGER endTime;

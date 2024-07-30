@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "Cube.h"
 #include "ImGuiLoader.h"
+
 using namespace graphics;
 
 #define SPEED 1000.0f
@@ -36,6 +37,7 @@ public:
 private:
 	void CloseCommandList();
 	void SetViewport();
+	void SetImGuiWindow();
 
 	Graphics* m_renderer;
 	Camera m_camera;

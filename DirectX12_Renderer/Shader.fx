@@ -62,8 +62,7 @@ cbuffer ConstantBuffer : register(b0)
     float4x4 viewproj;
     float4 eye;
     LightData light;
-    int height;
-    int width;
+    int blocktype;
 }
 
 // Vertex shader
@@ -156,6 +155,11 @@ float4 PS(DS_OUTPUT input) : SV_TARGET
     norm = normalize(norm);
     
     float4 color = float4(colormap.Sample(cmsampler, input.tex));
+    
+    if (blocktype == 2)
+    {
+        color = float4(heightmap.Sample(cmsampler, input.tex));
+    }
     
     // World space에서의 light pos와 dir 계산
     float3 worldlightpos = mul(light.pos, world).xyz;

@@ -18,7 +18,7 @@ void DrawTree(const vector<shared_ptr<FbxBoneInfo>>& bones, UINT& index)
 	else {
 		if (ImGui::TreeNode(bones[index]->boneName.c_str())) {
 			UINT parentindex = index;
-			for (int i = 0; i < bone->childcount; i++) {
+			for (UINT i = 0; i < bone->childcount; i++) {
 				index += 1;
 				while (parentindex != bones[index]->parentIndex) {
 					index += 1;
@@ -51,9 +51,6 @@ Scene::Scene(int height, int width, Graphics* renderer) :
 	CloseCommandList();
 	m_renderer->LoadAsset();
 
-
-	// Object
-	m_cube.ClearUnusedUploadBuffersAfterInit();
 }
 
 Scene::~Scene()
@@ -67,45 +64,7 @@ void Scene::Draw()
 {
 	// ImGui Render
 	m_imguiLoader.Draw();
-	ImGui::NewFrame();
-	{
-		ImGui::Begin("Details", NULL, ImGuiWindowFlags_AlwaysAutoResize);
-
-		ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
-		if (!ImGui::CollapsingHeader("Draw Modes")) {
-			if (ImGui::Button("Solid")) {
-				m_DrawMode = 1;
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("WireFrame")) {
-				m_DrawMode = 2;
-			}
-		}
-		if (!ImGui::CollapsingHeader("Objects")) {
-			if (ImGui::TreeNode(m_cube.m_objectname.c_str())) {
-				ImGui::Text("Translation");
-				ImGui::DragFloat("Translation X", &m_cube.m_translation_x, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::DragFloat("Translation Y", &m_cube.m_translation_y, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::DragFloat("Translation Z", &m_cube.m_translation_z, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::Text("Rotation");
-				ImGui::DragFloat("Rotation X", &m_cube.m_rotation_x, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::DragFloat("Rotation Y", &m_cube.m_rotation_y, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::DragFloat("Rotation Z", &m_cube.m_rotation_z, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::Text("Scaling");
-				ImGui::DragFloat("Scale X", &m_cube.m_scale_x, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::DragFloat("Scale Y", &m_cube.m_scale_y, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::DragFloat("Scale Z", &m_cube.m_scale_z, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
-
-				ImGui::BulletText("Vertex Count : %d", m_cube.m_vertexcount);
-				ImGui::SameLine();
-				ImGui::BulletText("Index Count : %d", m_cube.m_indexcount);
-
-				ImGui::TreePop();
-			}
-		}
-		ImGui::End();
-	}
+	SetImGuiWindow();
 
 	// DirectX Render
 	m_renderer->ResetPipeline();
@@ -113,6 +72,7 @@ void Scene::Draw()
 	m_renderer->SetBackBufferRender(m_renderer->GetCommandList(), DirectX::Colors::LightBlue);
 
 	SetViewport();
+
 
 	// WireFrame Draw Setting
 	if (m_DrawMode == 1)
@@ -127,6 +87,7 @@ void Scene::Draw()
 	// Object Draw
 	{
 		m_cube.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		
 	}
 
 	ImGui::Render();
@@ -197,4 +158,47 @@ void Scene::SetViewport()
 {
 	m_renderer->GetCommandList()->RSSetViewports(1, &m_viewport);
 	m_renderer->GetCommandList()->RSSetScissorRects(1, &m_scissorRect);
+}
+
+void Scene::SetImGuiWindow()
+{
+	ImGui::NewFrame();
+	{
+		ImGui::Begin("Details", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+
+		ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+		if (!ImGui::CollapsingHeader("Draw Modes")) {
+			if (ImGui::Button("Solid")) {
+				m_DrawMode = 1;
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("WireFrame")) {
+				m_DrawMode = 2;
+			}
+		}
+		if (!ImGui::CollapsingHeader("Objects")) {
+			if (ImGui::TreeNode(m_cube.m_objectname.c_str())) {
+				ImGui::Text("Translation");
+				ImGui::DragFloat("Translation X", &m_cube.m_translation_x, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Translation Y", &m_cube.m_translation_y, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Translation Z", &m_cube.m_translation_z, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::Text("Rotation");
+				ImGui::DragFloat("Rotation X", &m_cube.m_rotation_x, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Rotation Y", &m_cube.m_rotation_y, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Rotation Z", &m_cube.m_rotation_z, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::Text("Scaling");
+				ImGui::DragFloat("Scale X", &m_cube.m_scale_x, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Scale Y", &m_cube.m_scale_y, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+				ImGui::DragFloat("Scale Z", &m_cube.m_scale_z, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+
+				ImGui::BulletText("Vertex Count : %d", m_cube.m_vertexcount);
+				ImGui::SameLine();
+				ImGui::BulletText("Index Count : %d", m_cube.m_indexcount);
+
+				ImGui::TreePop();
+			}
+		}
+		ImGui::End();
+	}
 }

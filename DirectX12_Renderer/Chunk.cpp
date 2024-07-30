@@ -1,13 +1,18 @@
 #include "Chunk.h"
 
-Chunk::Chunk(Graphics* renderer)
+Chunk::Chunk(Graphics* renderer) :
+	m_block(0, 0, 0, BlockType::Stone, renderer)
 {
-	
+	m_renderer = renderer;
 }
 
-Block Chunk::GetBlock(int x, int y, int z) const
+Chunk::~Chunk()
 {
-	return Block(x, y, z, BlockType::Air);
+}
+
+BlockType Chunk::GetBlock(int x, int y, int z) const
+{
+	return BlockType::Stone;
 }
 
 void Chunk::GenerateChunk()
@@ -18,29 +23,28 @@ void Chunk::GenerateChunk()
 		{
 			for (int z = 0; z < 1; z++)
 			{
-				Block block = GetBlock(x, y, z);
-				m_blocks.push_back(block);
+				m_blocks.push_back(std::make_pair(BlockType::Stone, XMFLOAT3(x, y, z)));
 			}
 		}
 	}
 }
 
-void Chunk::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye)
+void Chunk::Draw(ComPtr<ID3D12GraphicsCommandList>& m_commandList, XMFLOAT4X4& viewproj, XMFLOAT4& eye)
 {
-	for (auto& block : m_blocks)
+	for(auto& block : m_blocks)
 	{
-		UINT cbvIndex = (UINT)m_blocks.size();
-		CD3DX12_GPU_DESCRIPTOR_HANDLE cbHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart());
-		cbHandle.Offset(cbvIndex, m_srvDescSize);
-
-		m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-		m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
-		m_commandList->IASetIndexBuffer(&m_indexBufferView);
+		//XMFLOAT4X4 world = MathHelper::Identity4x4();
+		//XMStoreFloat4x4(&world, XMMatrixTranslation(block.second.x, block.second.y, block.second.z));
+		//m_block.SetWorldTransform(world);
+		//m_block.SetBlockType(block.first);
 		
-		m_commandList->DrawIndexedInstanced(1, 0, 0, 0, 0 );
 	}
+	m_block.Draw(m_commandList, viewproj, eye);
 }
 
 void Chunk::ClearUnusedUploadBuffersAfterInit()
 {
+	m_block.ClearUnusedUploadBuffersAfterInit();
 }
+
+
