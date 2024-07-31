@@ -15,16 +15,19 @@ Chunk::~Chunk()
 
 BlockType Chunk::GetBlock(int x, int y, int z) const
 {
-	return std::rand() % 2 == 1 ? BlockType::Dirt : BlockType::Air;
+	float frequency = 0.2f;
+	float amplitude = 10.0f;
+	float surfaceZ = 50 + std::sin(y * frequency) * amplitude;
+	return (z < surfaceZ) ? BlockType::Dirt : BlockType::Air;
 }
 
 void Chunk::GenerateChunk()
 {
 	InstanceBuffer data;
 
-	for (int x = 0; x < CHUNK_SIZE; x++)
+	for (int x = 0; x < CHUNK_SIZE * 5; x++)
 	{
-		for (int y = 0; y < CHUNK_SIZE; y++)
+		for (int y = 0; y < CHUNK_SIZE * 5; y++)
 		{
 			for (int z = 0; z < 255; z++)
 			{
