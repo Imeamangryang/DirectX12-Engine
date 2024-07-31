@@ -20,7 +20,6 @@ struct ConstantBuffer
 	XMFLOAT4X4 viewproj;
 	XMFLOAT4 eye;
 	LightSource light;
-	UINT blockType;
 };
 
 struct SkyConstantBuffer
@@ -174,4 +173,5 @@ struct CharacterConstantBuffer
 struct InstanceBuffer
 {
 	XMFLOAT4X4 world;
+	UINT blockType;
 };

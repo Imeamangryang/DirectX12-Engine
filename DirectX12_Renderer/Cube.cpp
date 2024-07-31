@@ -32,7 +32,7 @@ void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 		XMMatrixTransformation(
 			XMVectorZero(),
 			XMVectorZero(),
-			XMVectorSet(m_scale_x * 100.0f, m_scale_y * 100.0f, m_scale_z * 100.0f, 100.0f),
+			XMVectorSet(m_scale_x, m_scale_y, m_scale_z, 1.0f),
 			XMVectorZero(),
 			XMQuaternionRotationRollPitchYaw(XMConvertToRadians(m_rotation_x), XMConvertToRadians(m_rotation_y), XMConvertToRadians(m_rotation_z)),
 			XMVectorSet(m_translation_x, m_translation_y, m_translation_z, 0.0)
@@ -42,7 +42,6 @@ void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 	m_constantBufferData.viewproj = viewproj;
 	m_constantBufferData.eye = eye;
 	m_constantBufferData.light = m_light.GetDirectionalLight();
-	m_constantBufferData.blockType = 2;
 	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };

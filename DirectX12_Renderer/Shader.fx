@@ -1,8 +1,8 @@
 #define NUM_CONTROL_POINTS 3
 
-Texture2D<float4> colormap : register(t0);
-Texture2D<float4> normalmap : register(t1);
-Texture2D<float4> heightmap : register(t2);
+Texture2D<float4> T_dirt : register(t0);
+Texture2D<float4> T_stone : register(t1);
+Texture2D<float4> T_cobblestone : register(t2);
 SamplerState dmsampler : register(s0);
 SamplerState cmsampler : register(s1);
 
@@ -66,15 +66,25 @@ cbuffer ConstantBuffer : register(b0)
     float4x4 viewproj;
     float4 eye;
     LightData light;
-    int blocktype;
 }
 
 struct InstanceBuffer
 {
     float4x4 instanceTrans;
+    int blocktype;
 };
 
 StructuredBuffer<InstanceBuffer> instanceTransforms : register(t3); // 인스턴스 변환 행렬
+
+// blocktype에 따라 다른 색상을 가지도록 설정
+float4 GetColor(int blocktype, float2 tex)
+{
+    if (blocktype == 0) return float4(1.0f, 0.0f, 0.0f, 1.0f);
+    else if (blocktype == 1) return float4(T_dirt.Sample(cmsampler, tex));
+    else if (blocktype == 2) return float4(T_stone.Sample(cmsampler, tex));
+    else if (blocktype == 3) return float4(T_cobblestone.Sample(cmsampler, tex));
+    else return float4(0.0f, 0.0f, 0.0f, 1.0f);
+}
 
 // Vertex shader
 VS_OUTPUT VS(VS_INPUT input)
@@ -171,15 +181,11 @@ DS_OUTPUT DS(
 float4 PS(DS_OUTPUT input) : SV_TARGET
 {
     
-    float3 norm = normalmap.Sample(cmsampler, input.tex).xyz + input.norm;
+    //float3 norm = normalmap.Sample(cmsampler, input.tex).xyz + input.norm;
+    float3 norm = input.norm;
     norm = normalize(norm);
     
-    float4 color = float4(colormap.Sample(cmsampler, input.tex));
-    
-    if (blocktype == 2)
-    {
-        color = float4(heightmap.Sample(cmsampler, input.tex));
-    }
+    float4 color = GetColor(instanceTransforms[input.instanceID].blocktype, input.tex);
     
     // World space에서의 light pos와 dir 계산
     float3 worldlightpos = mul(light.pos, world).xyz;

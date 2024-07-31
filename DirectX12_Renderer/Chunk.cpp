@@ -5,6 +5,8 @@ Chunk::Chunk(Graphics* renderer) :
 {
 	m_renderer = renderer;
 	GenerateChunk();
+
+	std::srand(static_cast<unsigned int>(std::time(nullptr)));
 }
 
 Chunk::~Chunk()
@@ -13,22 +15,26 @@ Chunk::~Chunk()
 
 BlockType Chunk::GetBlock(int x, int y, int z) const
 {
-	return BlockType::Stone;
+	return std::rand() % 2 == 1 ? BlockType::Dirt : BlockType::Air;
 }
 
 void Chunk::GenerateChunk()
 {
 	InstanceBuffer data;
+
 	for (int x = 0; x < CHUNK_SIZE; x++)
 	{
 		for (int y = 0; y < CHUNK_SIZE; y++)
 		{
-			for (int z = 0; z < 10; z++)
+			for (int z = 0; z < 255; z++)
 			{
 				XMFLOAT4X4 world = MathHelper::Identity4x4();
 				XMStoreFloat4x4(&world, XMMatrixTranslation(x * 4.0f, y * 4.0f, z * 4.0f));
 				data.world = world;
-				instanceData.push_back(data);
+				data.blockType = (UINT)GetBlock(x, y, z);
+				if (data.blockType != (UINT)BlockType::Air) {
+					instanceData.push_back(data);
+				}
 			}
 		}
 	}
