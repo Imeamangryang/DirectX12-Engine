@@ -15,10 +15,28 @@ Chunk::~Chunk()
 
 BlockType Chunk::GetBlock(int x, int y, int z) const
 {
-	float frequency = 0.2f;
+	float frequency = 0.1f;
 	float amplitude = 10.0f;
-	float surfaceZ = 50 + std::sin(y * frequency) * amplitude;
-	return (z < surfaceZ) ? BlockType::Dirt : BlockType::Air;
+
+	float offset_x = std::sin(x * frequency) * amplitude;
+	float offset_y = std::cos(y * frequency) * amplitude;
+
+	float surfaceZ = 50 + offset_x + offset_y;
+
+	float stoneZ = 52;
+
+	if (z < surfaceZ)
+	{
+		return BlockType::Dirt;
+	}
+	else if (z < stoneZ)
+	{
+		return BlockType::Stone;
+	}
+	else
+	{
+		return BlockType::Air;
+	}
 }
 
 void Chunk::GenerateChunk()
