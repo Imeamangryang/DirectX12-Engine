@@ -16,7 +16,7 @@ public:
 	void Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye, UINT instanceCount);
 
 	void SetIsWireframe(bool isWireframe) { this->isWireframe = isWireframe; }
-	void CreateInstanceBuffer(Graphics* renderer, const std::vector<InstanceBuffer>& instanceData);
+	void CreateInstanceBuffer(Graphics* renderer, const std::vector<InstanceBuffer> instanceData);
 
 private:
 	void CreateDescriptorHeap(Graphics* Renderer);
@@ -52,7 +52,7 @@ private:
 
 	DirectionalLight m_light;
 
-	std::shared_ptr<Texture> m_cubeMap;
-	std::shared_ptr<Texture> m_normalMap;
-	std::shared_ptr<Texture> m_heightMap;
+	std::shared_ptr<Texture> m_Tdirt;
+	std::shared_ptr<Texture> m_Tstone;
+	std::shared_ptr<Texture> m_Tcobblestone;
 };

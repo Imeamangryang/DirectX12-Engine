@@ -84,7 +84,7 @@ VS_OUTPUT VS(VS_INPUT input)
     
     
     output.pos = float4(input.pos, 1.0f);
-    output.pos += mul(instanceTransforms[input.instanceID].instanceTrans, output.pos);
+    //output.pos += mul(instanceTransforms[input.instanceID].instanceTrans, output.pos);
     
     output.norm = input.norm;
     
@@ -151,10 +151,13 @@ DS_OUTPUT DS(
 
     Output.tex = float2(patch[0].tex.xy * domain.x + patch[1].tex.xy * domain.y + patch[2].tex.xy * domain.z);
     
+    Output.instanceID = patch[0].instanceID;
+    
     //Output.norm += normalmap.SampleLevel(dmsampler, Output.tex, 0).xyz;
     //float height = heightmap.SampleLevel(dmsampler, Output.tex.xy, 0).r;
     
     //Output.pos.xyz += Output.norm * height;
+    Output.pos += mul(instanceTransforms[Output.instanceID].instanceTrans, Output.pos);
  
     Output.pos = mul(world, Output.pos);
     Output.pos = mul(Output.pos, viewproj);

@@ -42,14 +42,14 @@ void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 	m_constantBufferData.viewproj = viewproj;
 	m_constantBufferData.eye = eye;
 	m_constantBufferData.light = m_light.GetDirectionalLight();
-	m_constantBufferData.blockType = 0;
+	m_constantBufferData.blockType = 2;
 	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
 	m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_srvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
-	m_commandList->SetGraphicsRootDescriptorTable(0, m_cubeMap->GetGPUHandle()); // t0 : CubeMap , t1 : NormalMap, t2 : HeightMap
+	m_commandList->SetGraphicsRootDescriptorTable(0, m_Tdirt->GetGPUHandle()); // t0 : CubeMap , t1 : NormalMap, t2 : HeightMap
 	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_srvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
 
@@ -73,9 +73,9 @@ void Cube::CreateDescriptorHeap(Graphics* Renderer)
 	m_srvDescSize = Renderer->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	// Texture 로딩
-	m_cubeMap = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/dirt.png", 0);
-	m_normalMap = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/tile_normal.png", 1);
-	m_heightMap = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/tile_height.png", 2);
+	m_Tdirt = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/dirt.png", 0);
+	m_Tstone = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/stone.png", 1);
+	m_Tcobblestone = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/cobblestone.png", 2);
 
 	// ConstantBuffer 생성
 	UINT64 bufferSize = sizeof(ConstantBuffer);
@@ -284,37 +284,24 @@ void Cube::LoadMesh(Graphics* Renderer)
 	m_indexBufferView.SizeInBytes = ibByteSize;
 }
 
-void Cube::CreateInstanceBuffer(Graphics* renderer, const std::vector<InstanceBuffer>& instanceData)
+void Cube::CreateInstanceBuffer(Graphics* renderer, const std::vector<InstanceBuffer> instanceData)
 {
 	// 인스턴스 데이터 크기 계산
 	UINT64 instanceBufferSize = sizeof(InstanceBuffer) * instanceData.size();
 
-	// 업로드 버퍼 생성
-	ComPtr<ID3D12Resource> instanceBufferUpload;
-	renderer->CreateCommittedBuffer(m_StructuredBuffer, instanceBufferUpload, &CD3DX12_RESOURCE_DESC::Buffer(instanceBufferSize));
+	//// 업로드 버퍼 생성
+	renderer->CreateBuffer(m_StructuredBuffer, &CD3DX12_RESOURCE_DESC::Buffer(instanceBufferSize));
 	m_StructuredBuffer->SetName(L"InstanceBuffer");
 
 	// 데이터 복사
-	D3D12_SUBRESOURCE_DATA instanceDataDesc = {};
-	instanceDataDesc.pData = instanceData.data();
-	instanceDataDesc.RowPitch = instanceBufferSize;
-	instanceDataDesc.SlicePitch = instanceBufferSize;
-
-	UpdateSubresources(renderer->GetCommandList().Get(), m_StructuredBuffer.Get(), instanceBufferUpload.Get(), 0, 0, 1, &instanceDataDesc);
-
-	//// 데이터 복사
-	//UINT64* pMappedData = nullptr;
-	//CD3DX12_RANGE readRange(0, 0); // 읽기 범위는 0으로 설정
-	//if (FAILED(instanceBufferUpload->Map(0, &readRange, reinterpret_cast<void**>(&pMappedData))))
-	//{
-	//	throw std::runtime_error("Failed to map instance buffer upload resource.");
-	//}
-	//memcpy(pMappedData, instanceData.data(), instanceBufferSize);
-	//instanceBufferUpload->Unmap(0, nullptr);
-
-	// 리소스 배리어 설정	
-	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_StructuredBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ);
-	renderer->GetCommandList()->ResourceBarrier(1, &barrier);
+	UINT64* pMappedData = nullptr;
+	CD3DX12_RANGE readRange(0, 0); // 읽기 범위는 0으로 설정
+	if (FAILED(m_StructuredBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pMappedData))))
+	{
+		throw std::runtime_error("Failed to map instance buffer upload resource.");
+	}
+	memcpy(pMappedData, instanceData.data(), instanceBufferSize);
+	m_StructuredBuffer->Unmap(0, nullptr);
 
 	// SRV 생성
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};

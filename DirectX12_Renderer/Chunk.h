@@ -23,5 +23,7 @@ public:
 private:
 	std::vector<Cube> m_blocks;
 	Cube m_block;
+	std::vector<InstanceBuffer> instanceData;
+
 	Graphics* m_renderer;
 };
