@@ -3,6 +3,8 @@
 #include "wrl.h"
 #include <vector>
 #include <algorithm>
+#include <iomanip>
+#include <numeric>
 #include "fbxsdk.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_dx12.h"

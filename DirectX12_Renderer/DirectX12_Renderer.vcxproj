@@ -164,6 +164,7 @@
     <ClCompile Include="MathHelper.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="OrbitCycle.cpp" />
+    <ClCompile Include="PerlinNoise.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -193,6 +194,7 @@
     <ClInclude Include="MathHelper.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="OrbitCycle.h" />
+    <ClInclude Include="PerlinNoise.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="stdafx.h" />

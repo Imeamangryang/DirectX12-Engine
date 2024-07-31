@@ -7,23 +7,26 @@ Chunk::Chunk(Graphics* renderer) :
 	GenerateChunk();
 
 	std::srand(static_cast<unsigned int>(std::time(nullptr)));
+	noise = PerlinNoise(std::rand());
 }
 
 Chunk::~Chunk()
 {
 }
 
-BlockType Chunk::GetBlock(int x, int y, int z) const
+BlockType Chunk::GetBlock(int x, int y, int z)
 {
 	float frequency = 0.1f;
 	float amplitude = 10.0f;
 
 	float offset_x = std::sin(x * frequency) * amplitude;
-	float offset_y = std::cos(y * frequency) * amplitude;
+	float offset_y = std::cos(y * frequency) * amplitude;	
 
-	float surfaceZ = 50 + offset_x + offset_y;
+	float perlinnoise = noise.noise(x, y, 4);
 
-	float stoneZ = 52;
+	float surfaceZ = 20 + perlinnoise * 20;
+
+	float stoneZ = 30;
 
 	if (z < surfaceZ)
 	{
