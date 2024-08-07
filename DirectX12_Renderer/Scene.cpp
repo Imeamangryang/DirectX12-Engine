@@ -35,7 +35,7 @@ Scene::Scene(int height, int width, Graphics* renderer) :
 	m_camera(height, width),
 	m_imguiLoader(renderer),
 	m_cube(renderer),
-	m_chunk(renderer)
+	m_chunk(renderer, m_camera.GetEyePosition())
 {
 	m_viewport.TopLeftX = 0;
 	m_viewport.TopLeftY = 0;
@@ -72,6 +72,8 @@ void Scene::Draw()
 	m_renderer->SetBackBufferRender(m_renderer->GetCommandList(), DirectX::Colors::LightBlue);
 
 	SetViewport();
+
+	m_chunk.UpdateChunks(m_camera.GetEyePosition());
 
 	// Object Draw
 	{

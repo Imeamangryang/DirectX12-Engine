@@ -9,8 +9,6 @@ m_worldTransform(MathHelper::Identity4x4())
 
 	m_objectname = "Plane";
 
-	m_translation_x = -200.0f;
-
 }
 
 Cube::~Cube()

@@ -68,8 +68,6 @@ VS_OUTPUT VS(VS_INPUT input)
 {
     VS_OUTPUT output;
     
-    
-    
     output.pos = float4(input.pos, 1.0f);
     output.pos += mul(instanceTransforms[input.instanceID].instanceTrans, output.pos);
  

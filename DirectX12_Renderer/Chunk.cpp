@@ -1,6 +1,5 @@
 #include "Chunk.h"
 
-
 std::map<float, float> ContinentalnessNodes = {
 	{-1.0, 42},
 	{-0.4, 42},
@@ -36,20 +35,33 @@ std::map<float, float> PeakValleysNodes = {
 	{1.0, 10},
 };
 
-Chunk::Chunk(Graphics* renderer)
+Chunk::Chunk(Graphics* renderer, XMFLOAT4 cameraPosition)
 {
 	m_renderer = renderer;
 
-	// 여러 블록을 초기화
-	for (int i = 0; i < CHUNK_DISTANCE * CHUNK_DISTANCE; ++i) {
-		m_blocks.push_back(Cube(renderer));
-	}
+	// 카메라 위치를 기준으로 청크를 생성
+	int cameraChunkX = static_cast<int>(cameraPosition.x / (CHUNK_SIZE * 4.0f));
+	int cameraChunkY = static_cast<int>(cameraPosition.y / (CHUNK_SIZE * 4.0f));
 
-	// 여러 블록을 초기화
-	for (int i = 0; i < CHUNK_DISTANCE; ++i) {
-		for (int j = 0; j < CHUNK_DISTANCE; ++j) {
-			GenerateChunk(i, j);
-			m_blocks[i * CHUNK_DISTANCE + j].CreateInstanceBuffer(m_renderer, instanceData);
+	for (int dx = -CHUNK_DISTANCE; dx <= CHUNK_DISTANCE; ++dx)
+	{
+		for (int dy = -CHUNK_DISTANCE; dy <= CHUNK_DISTANCE; ++dy)
+		{
+			int chunkX = cameraChunkX + dx;
+			int chunkY = cameraChunkY + dy;
+
+			// 중복 청크 생성 방지
+			if (std::find(m_chunkMap.begin(), m_chunkMap.end(), std::make_pair(chunkX, chunkY)) != m_chunkMap.end())
+			{
+				continue;
+			}
+			m_chunkMap.push_back(std::make_pair(chunkX, chunkY));
+
+			// Draw할 Chunk 생성
+			m_blocks.push_back(Cube(m_renderer));
+			GenerateChunk(chunkX, chunkY);
+			m_blocks.back().CreateInstanceBuffer(m_renderer, instanceData);
+			printf("test");
 		}
 	}
 }
@@ -75,13 +87,6 @@ BlockType Chunk::GetBlock(float x, float y, int z)
 	height = getSplineValue(continentalness, ContinentalnessNodes);
 	height += getSplineValue(erosioness, ErosionNodes);
 	height += getSplineValue(peaksValleyness, PeakValleysNodes);
-
-	//height = 108 * 0.3 * (continentalness + 1) / 2;
-
-	//if (height >= 128 * 0.95) height = 128 * 0.95;
-	if (height <= 20) height = 20;
-
-	//float surfaceZ = 30 + continentalness * 20;
 
 	if (z < height)
 	{
@@ -152,6 +157,33 @@ void Chunk::Draw(ComPtr<ID3D12GraphicsCommandList>& m_commandList, XMFLOAT4X4& v
 {
 	for (auto& block : m_blocks) {
 		block.Draw(m_commandList, viewproj, eye);
+	}
+}
+
+void Chunk::UpdateChunks(XMFLOAT4 cameraPosition)
+{
+	// 카메라 위치를 기준으로 청크를 생성
+	int cameraChunkX = static_cast<int>(cameraPosition.x / (CHUNK_SIZE * 4.0f));
+	int cameraChunkY = static_cast<int>(cameraPosition.y / (CHUNK_SIZE * 4.0f));
+
+	for (int dx = -CHUNK_DISTANCE; dx <= CHUNK_DISTANCE; ++dx)
+	{
+		for (int dy = -CHUNK_DISTANCE; dy <= CHUNK_DISTANCE; ++dy)
+		{
+			int chunkX = cameraChunkX + dx;
+			int chunkY = cameraChunkY + dy;
+
+			// 중복 청크 생성 방지
+			if (std::find(m_chunkMap.begin(), m_chunkMap.end(), std::make_pair(chunkX, chunkY)) == m_chunkMap.end())
+			{
+				m_chunkMap.push_back(std::make_pair(chunkX, chunkY));
+
+				// Draw할 Chunk 생성
+				m_blocks.push_back(Cube(m_renderer));
+				GenerateChunk(chunkX, chunkY);
+				m_blocks.back().CreateInstanceBuffer(m_renderer, instanceData);
+			}
+		}
 	}
 }
 
