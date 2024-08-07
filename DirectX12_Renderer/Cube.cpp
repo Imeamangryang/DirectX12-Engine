@@ -17,7 +17,7 @@ Cube::~Cube()
 {
 }
 
-void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye, UINT instanceCount)
+void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye)
 {
 	if (isWireframe == false) {
 		m_commandList->SetPipelineState(m_pipelineState.Get());
@@ -52,12 +52,17 @@ void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_srvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
 
-
-	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST); // describe how to read the vertex buffer.
+	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // describe how to read the vertex buffer.
 	m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 	m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
-	m_commandList->DrawIndexedInstanced(m_indexcount, instanceCount, 0, 0, 0);
+	//m_commandList->BeginQuery(m_queryHeap.Get(), D3D12_QUERY_TYPE_BINARY_OCCLUSION, 0);
+	m_commandList->DrawIndexedInstanced(36, instanceCount, 0, 0, 0);
+	//m_commandList->EndQuery(m_queryHeap.Get(), D3D12_QUERY_TYPE_BINARY_OCCLUSION, 0);
+
+	//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_queryResultBuffer.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST));
+	//m_commandList->ResolveQueryData(m_queryHeap.Get(), D3D12_QUERY_TYPE_BINARY_OCCLUSION, 0, 1, m_queryResultBuffer.Get(), 0);
+	//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_queryResultBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
 void Cube::CreateDescriptorHeap(Graphics* Renderer)
@@ -68,18 +73,19 @@ void Cube::CreateDescriptorHeap(Graphics* Renderer)
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	Renderer->CreateDescriptorHeap(&srvHeapDesc, m_srvHeap);
+	m_srvHeap->SetName(L"Cube Descriptor Heap");
 
 	m_srvDescSize = Renderer->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 	// Texture 로딩
 	m_Tdirt = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/dirt.png", 0);
-	m_Tstone = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/stone.png", 1);
+	m_Tstone = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/water.png", 1);
 	m_Tcobblestone = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/cobblestone.png", 2);
 
 	// ConstantBuffer 생성
 	UINT64 bufferSize = sizeof(ConstantBuffer);
 	Renderer->CreateBuffer(m_CBV, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize));
-	m_CBV->SetName(L"CBV");
+	m_CBV->SetName(L"Cube Constant Buffer");
 
 	// ConstantBufferView 생성
 	D3D12_CONSTANT_BUFFER_VIEW_DESC	cbvDesc = {};
@@ -103,6 +109,23 @@ void Cube::CreateDescriptorHeap(Graphics* Renderer)
 void Cube::InitPipeline(Graphics* Renderer)
 {
 	CreateDescriptorHeap(Renderer);
+
+	//// Occlusion Query를 위한 QueryHeap 생성
+	//D3D12_QUERY_HEAP_DESC queryHeapDesc = {};
+	//queryHeapDesc.Count = 1;
+	//queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_OCCLUSION;
+	//Renderer->GetDevice()->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&m_queryHeap));
+
+	//// QueryResult를 저장할 버퍼 생성
+	//D3D12_RESOURCE_DESC queryResultDesc = CD3DX12_RESOURCE_DESC::Buffer(8);
+	//Renderer->GetDevice()->CreateCommittedResource(
+	//	&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+	//	D3D12_HEAP_FLAG_NONE,
+	//	&queryResultDesc,
+	//	D3D12_RESOURCE_STATE_PREDICATION,
+	//	nullptr,
+	//	IID_PPV_ARGS(&m_queryResultBuffer));
+	//m_queryResultBuffer->SetName(L"Cube queryResultBuffer");
 
 	// Root Signature 생성
 	CD3DX12_DESCRIPTOR_RANGE range[3];
@@ -133,16 +156,13 @@ void Cube::InitPipeline(Graphics* Renderer)
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
 
 	Renderer->createRootSignature(&rootDesc, m_rootSignature);
+	m_rootSignature->SetName(L"Cube Root Signature");
 
 	// Shader Compile
 	D3D12_SHADER_BYTECODE PSBytecode = {};
 	D3D12_SHADER_BYTECODE VSBytecode = {};
-	D3D12_SHADER_BYTECODE HSBytecode = {};
-	D3D12_SHADER_BYTECODE DSBytecode = {};
 	Renderer->CompileShader(L"shader.fx", "VS", VSBytecode, VERTEX_SHADER);
 	Renderer->CompileShader(L"shader.fx", "PS", PSBytecode, PIXEL_SHADER);
-	Renderer->CompileShader(L"shader.fx", "HS", HSBytecode, HULL_SHADER);
-	Renderer->CompileShader(L"shader.fx", "DS", DSBytecode, DOMAIN_SHADER);
 
 	// Input Layout 생성
 	D3D12_INPUT_ELEMENT_DESC inputLayout[] =
@@ -163,22 +183,40 @@ void Cube::InitPipeline(Graphics* Renderer)
 	psoDesc.InputLayout = inputLayoutDesc;
 	psoDesc.VS = VSBytecode;
 	psoDesc.PS = PSBytecode;
-	psoDesc.HS = HSBytecode;
-	psoDesc.DS = DSBytecode;
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
 	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
 	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_PATCH;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	psoDesc.SampleDesc.Count = 1;
 	Renderer->createPSO(&psoDesc, m_pipelineState);
+	m_pipelineState->SetName(L"Cube Pipeline State");
 
 	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
 	Renderer->createPSO(&psoDesc, m_pipelineStateWireframe);
+	m_pipelineStateWireframe->SetName(L"Cube Wireframe Pipeline State");
+
+	//// ExecuteIndirect 명령에 전달되는 데이터 해석 방법을 GPU에게 알려주는 Root Signature.
+	//{
+	//	// Each command consists of a CBV update and a DrawInstanced call.
+	//	D3D12_INDIRECT_ARGUMENT_DESC argumentDescs[2] = {};
+	//	argumentDescs[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
+	//	argumentDescs[0].ConstantBufferView.RootParameterIndex = Cbv;
+	//	argumentDescs[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
+
+	//	D3D12_COMMAND_SIGNATURE_DESC commandSignatureDesc = {};
+	//	commandSignatureDesc.pArgumentDescs = argumentDescs;
+	//	commandSignatureDesc.NumArgumentDescs = _countof(argumentDescs);
+	//	commandSignatureDesc.ByteStride = sizeof(IndirectCommand);
+
+	//	Renderer->GetDevice()->CreateCommandSignature(&commandSignatureDesc, m_rootSignature.Get(), IID_PPV_ARGS(&m_commandSignature));
+	//	m_commandSignature->SetName(L"Cube Command Signature");
+	//}
+
 }
 
 void Cube::LoadMesh(Graphics* Renderer)
@@ -287,19 +325,19 @@ void Cube::CreateInstanceBuffer(Graphics* renderer, const std::vector<InstanceBu
 {
 	// 인스턴스 데이터 크기 계산
 	UINT64 instanceBufferSize = sizeof(InstanceBuffer) * instanceData.size();
+	instanceCount = static_cast<UINT>(instanceData.size());
 
-	//// 업로드 버퍼 생성
+	// 업로드 버퍼 생성
 	renderer->CreateBuffer(m_StructuredBuffer, &CD3DX12_RESOURCE_DESC::Buffer(instanceBufferSize));
-	m_StructuredBuffer->SetName(L"InstanceBuffer");
+	m_StructuredBuffer->SetName(L"Cube InstanceBuffer");
 
 	// 데이터 복사
-	UINT64* pMappedData = nullptr;
 	CD3DX12_RANGE readRange(0, 0); // 읽기 범위는 0으로 설정
-	if (FAILED(m_StructuredBuffer->Map(0, &readRange, reinterpret_cast<void**>(&pMappedData))))
+	if (FAILED(m_StructuredBuffer->Map(0, &readRange, reinterpret_cast<void**>(&m_StructuredBufferDataBegin))))
 	{
 		throw std::runtime_error("Failed to map instance buffer upload resource.");
 	}
-	memcpy(pMappedData, instanceData.data(), instanceBufferSize);
+	memcpy(m_StructuredBufferDataBegin, instanceData.data(), instanceBufferSize);
 	m_StructuredBuffer->Unmap(0, nullptr);
 
 	// SRV 생성
@@ -315,4 +353,12 @@ void Cube::CreateInstanceBuffer(Graphics* renderer, const std::vector<InstanceBu
 	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandleInstance(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 4, m_srvDescSize);
 
 	renderer->CreateSRV(m_StructuredBuffer.Get(), &srvDesc, srvHandleInstance);
+}
+
+void Cube::UpdateInstanceBuffer(const std::vector<InstanceBuffer> instanceData)
+{
+	// 인스턴스 데이터 크기 계산
+	UINT64 instanceBufferSize = sizeof(InstanceBuffer) * instanceData.size();
+
+	memcpy(m_StructuredBufferDataBegin, instanceData.data(), instanceBufferSize);
 }

@@ -8,6 +8,7 @@ ImGuiLoader::ImGuiLoader(Graphics* renderer)
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	renderer->CreateDescriptorHeap(&srvHeapDesc, m_srvHeap);
+	m_srvHeap->SetName(L"ImGui SRV Heap");
 
 	m_srvDescSize = renderer->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 

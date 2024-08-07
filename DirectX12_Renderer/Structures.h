@@ -11,7 +11,8 @@ enum class BlockType {
 	Dirt,
 	Stone,
 	Cobblestone,
-	Oak_planks
+	Oak_planks,
+	Water
 };
 
 struct ConstantBuffer
@@ -174,4 +175,5 @@ struct InstanceBuffer
 {
 	XMFLOAT4X4 world;
 	UINT blockType;
+	bool isvisible;
 };

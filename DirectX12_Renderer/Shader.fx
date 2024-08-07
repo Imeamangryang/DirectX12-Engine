@@ -24,30 +24,6 @@ struct VS_OUTPUT
     uint instanceID : SV_InstanceID;
 };
 
-struct HS_CONTROL_POINT_OUTPUT
-{
-    float4 pos : SV_POSITION;
-    float3 norm : NORMAL;
-    float3 tan : TANGENT;
-    float2 tex : TEXCOORD;
-    uint instanceID : SV_InstanceID;
-};
-
-struct HS_CONSTANT_DATA_OUTPUT
-{
-    float EdgeTessFactor[3] : SV_TessFactor;
-    float InsideTessFactor : SV_InsideTessFactor;
-};
-
-struct DS_OUTPUT
-{
-    float4 pos : SV_POSITION;
-    float3 norm : NORMAL;
-    float3 tan : TANGENT;
-    float2 tex : TEXCOORD;
-    uint instanceID : SV_InstanceID;
-};
-
 struct LightData
 {
     float4 pos;
@@ -72,6 +48,7 @@ struct InstanceBuffer
 {
     float4x4 instanceTrans;
     int blocktype;
+    bool isvisible;
 };
 
 StructuredBuffer<InstanceBuffer> instanceTransforms : register(t3); // 인스턴스 변환 행렬
@@ -94,7 +71,10 @@ VS_OUTPUT VS(VS_INPUT input)
     
     
     output.pos = float4(input.pos, 1.0f);
-    //output.pos += mul(instanceTransforms[input.instanceID].instanceTrans, output.pos);
+    output.pos += mul(instanceTransforms[input.instanceID].instanceTrans, output.pos);
+ 
+    output.pos = mul(world, output.pos);
+    output.pos = mul(output.pos, viewproj);
     
     output.norm = input.norm;
     
@@ -107,78 +87,8 @@ VS_OUTPUT VS(VS_INPUT input)
     return output;
 }
 
-// Hull shader
-HS_CONSTANT_DATA_OUTPUT HS_Constant(
-	InputPatch<VS_OUTPUT, NUM_CONTROL_POINTS> ip,
-	uint PatchID : SV_PrimitiveID)
-{
-    HS_CONSTANT_DATA_OUTPUT Output;
-
-    Output.EdgeTessFactor[0] = 9;
-    Output.EdgeTessFactor[1] = 9;
-    Output.EdgeTessFactor[2] = 9;
-    Output.InsideTessFactor = 9;
-
-    return Output;
-}
-
-[domain("tri")]
-[partitioning("fractional_odd")]
-[outputtopology("triangle_cw")]
-[outputcontrolpoints(3)]
-[patchconstantfunc("HS_Constant")]
-HS_CONTROL_POINT_OUTPUT HS(
-	InputPatch<VS_OUTPUT, NUM_CONTROL_POINTS> ip,
-	uint i : SV_OutputControlPointID,
-	uint PatchID : SV_PrimitiveID)
-{
-    HS_CONTROL_POINT_OUTPUT Output;
-
-    Output.pos = ip[i].pos;
-    Output.norm = ip[i].norm;
-    Output.tan = ip[i].tan;
-    Output.tex = ip[i].tex;
-    Output.instanceID = ip[i].instanceID;
-
-    return Output;
-}
-
-
-// Domain shader
-[domain("tri")]
-DS_OUTPUT DS(
-    HS_CONSTANT_DATA_OUTPUT input,
-    float3 domain : SV_DomainLocation,
-    const OutputPatch<HS_CONTROL_POINT_OUTPUT, NUM_CONTROL_POINTS> patch)
-{
-    DS_OUTPUT Output;
-
-    Output.pos = float4(patch[0].pos.xyz * domain.x + patch[1].pos.xyz * domain.y + patch[2].pos.xyz * domain.z, 1);
-    
-    Output.norm = normalize(patch[0].norm.xyz * domain.x + patch[1].norm.xyz * domain.y + patch[2].norm.xyz * domain.z);
-    
-    Output.tan = normalize(patch[0].tan.xyz * domain.x + patch[1].tan.xyz * domain.y + patch[2].tan.xyz * domain.z);
-
-    Output.tex = float2(patch[0].tex.xy * domain.x + patch[1].tex.xy * domain.y + patch[2].tex.xy * domain.z);
-    
-    Output.instanceID = patch[0].instanceID;
-    
-    //Output.norm += normalmap.SampleLevel(dmsampler, Output.tex, 0).xyz;
-    //float height = heightmap.SampleLevel(dmsampler, Output.tex.xy, 0).r;
-    
-    //Output.pos.xyz += Output.norm * height;
-    Output.pos += mul(instanceTransforms[Output.instanceID].instanceTrans, Output.pos);
- 
-    Output.pos = mul(world, Output.pos);
-    Output.pos = mul(Output.pos, viewproj);
-    
-    Output.norm = mul((float3x3)world, Output.norm);
-    
-    return Output;
-}
-
 // Pixel shader
-float4 PS(DS_OUTPUT input) : SV_TARGET
+float4 PS(VS_OUTPUT input) : SV_TARGET
 {
     
     //float3 norm = normalmap.Sample(cmsampler, input.tex).xyz + input.norm;

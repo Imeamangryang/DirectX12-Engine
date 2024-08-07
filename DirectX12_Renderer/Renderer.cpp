@@ -157,6 +157,7 @@ namespace graphics {
 			{
 				throw GFX_Exception("Create DescriptorHeap failed on init.");
 			}
+			m_RTVHeap->SetName(L"Render Target View Descriptor Heap");
 
 			m_RTVDescSize = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
@@ -169,6 +170,7 @@ namespace graphics {
 					throw GFX_Exception("Swap Chain GetBuffer failed on init.");
 				}
 				m_device->CreateRenderTargetView(m_RenderTarget[i], NULL, rtvHandle);
+				m_RenderTarget[i]->SetName(L"Render Target View");
 
 				rtvHandle.Offset(1, m_RTVDescSize);
 			}
@@ -184,6 +186,7 @@ namespace graphics {
 			{
 				throw GFX_Exception("Create descriptor heap failed for Depth/Stencil.");
 			}
+			m_DSVHeap->SetName(L"Depth Stencil View Descriptor Heap");
 
 			D3D12_CLEAR_VALUE dsOptimizedClearValue = {};
 			dsOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
@@ -245,10 +248,21 @@ namespace graphics {
 		// 10. ImGUI 초기화
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO();
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 		io.MouseDrawCursor = true;
+		io.WantCaptureMouse = false;
+
+		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+		ImGuiStyle& style = ImGui::GetStyle();
+		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+		{
+			style.WindowRounding = 0.0f;
+			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+		}
 
 		// ImGUI 초기화
 		ImGui_ImplWin32_Init(win);
@@ -280,6 +294,11 @@ namespace graphics {
 	{
 		ID3D12CommandList* lCmds[] = { m_commandList.Get()};
 		m_commandQueue->ExecuteCommandLists(__crt_countof(lCmds), lCmds);
+
+		// Update and Render additional Platform Windows
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault(nullptr, (void*)m_commandList.Get());
+	
 
 		// swap the back buffers.
 		if (FAILED(m_swapChain->Present(0, 0))) 

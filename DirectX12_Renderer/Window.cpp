@@ -78,7 +78,7 @@ Window::Window(LPCWSTR appName, int height, int width, WNDPROC WndProc, bool isF
 	}
 
 	// Bring the window up on the screen and set it as main focus.
-	ShowWindow(mWindow, SW_SHOW); // returns 0 if window was previously hidden, non-zero if it wasn't. We don't care so ignoring return value.
+	ShowWindow(mWindow, SW_SHOWDEFAULT); // returns 0 if window was previously hidden, non-zero if it wasn't. We don't care so ignoring return value.
 	SetForegroundWindow(mWindow); // returns zero if window already in foreground, non-zero if it wasn't. We don't care so ignoring return value.
 
 								 // Hide the mouse cursor.

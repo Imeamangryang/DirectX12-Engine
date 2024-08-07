@@ -8,7 +8,7 @@
 
 using namespace graphics;
 
-#define SPEED 1000.0f
+#define SPEED 100.0f
 #define ROT_ANGLE 0.75f
 
 struct InputDirections
@@ -50,4 +50,5 @@ private:
 
 	Cube m_cube;
 	Chunk m_chunk;
+	vector<Chunk> m_chunks;
 };

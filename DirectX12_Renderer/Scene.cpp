@@ -51,7 +51,6 @@ Scene::Scene(int height, int width, Graphics* renderer) :
 
 	CloseCommandList();
 	m_renderer->LoadAsset();
-
 }
 
 Scene::~Scene()
@@ -74,20 +73,8 @@ void Scene::Draw()
 
 	SetViewport();
 
-
-	// WireFrame Draw Setting
-	if (m_DrawMode == 1)
-	{
-		m_cube.SetIsWireframe(false);
-	}
-	else
-	{
-		m_cube.SetIsWireframe(true);
-	}
-
 	// Object Draw
 	{
-		//m_cube.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 		m_chunk.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 	}
 
@@ -168,6 +155,12 @@ void Scene::SetImGuiWindow()
 		ImGui::Begin("Details", NULL, ImGuiWindowFlags_AlwaysAutoResize);
 
 		ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+		ImGui::BulletText("Camera Position : %.2f %.2f %.2f", m_camera.GetEyePosition().x, m_camera.GetEyePosition().y, m_camera.GetEyePosition().z);
+
+		ImGui::BulletText("Continentalness : %.2f", m_chunk.GetContinentNoise(m_camera.GetEyePosition().x, m_camera.GetEyePosition().y));
+		ImGui::BulletText("Erosion : %.2f", m_chunk.GetErosionNoise(m_camera.GetEyePosition().x, m_camera.GetEyePosition().y));
+		ImGui::BulletText("PeaksValleys : %.2f", m_chunk.GetPeaksValleysNoise(m_camera.GetEyePosition().x, m_camera.GetEyePosition().y));
 
 		if (!ImGui::CollapsingHeader("Draw Modes")) {
 			if (ImGui::Button("Solid")) {

@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <numeric>
+#include <pdh.h>
 #include "fbxsdk.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_dx12.h"

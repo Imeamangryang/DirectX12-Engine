@@ -1,33 +1,37 @@
 #include "PerlinNoise.h" 
 
-PerlinNoise::PerlinNoise(unsigned int seed)
+PerlinNoise::PerlinNoise(unsigned int seed, float frequency, float amplitude, float lacunarity, float persistence) :
+	mFrequency(frequency),
+	mAmplitude(amplitude),
+	mLacunarity(lacunarity),
+	mPersistence(persistence)
 {
-    // Permutation 벡터 초기화
-    p.resize(256);
-    std::iota(p.begin(), p.end(), 0);
-    std::default_random_engine engine(seed);
-    std::shuffle(p.begin(), p.end(), engine);
-    p.insert(p.end(), p.begin(), p.end());
+	// Permutation 벡터 초기화
+	p.resize(256);
+	std::iota(p.begin(), p.end(), 0);
+	std::default_random_engine engine(seed);
+	std::shuffle(p.begin(), p.end(), engine);
+	p.insert(p.end(), p.begin(), p.end());
 }
 
 double PerlinNoise::noise(double x, double y, int octaves)
 {
-    double total = 0.0;
-    double frequency = 0.1;
-    double amplitude = 10.0;
-    double maxValue = 0.0; // 정규화하기 위한 최대값
-    double persistence = 0.5;
+	double total = 0.0;
+	double frequency = mFrequency;
+	double amplitude = mAmplitude;
+	double maxValue = 0.0; // 정규화하기 위한 최대값
+	double persistence = mPersistence;
 
-    for (int i = 0; i < octaves; ++i) {
-        total += singleNoise(x * frequency, y * frequency, 0.8) * amplitude;
+	for (int i = 0; i < octaves; ++i) {
+		total += singleNoise(x * frequency, y * frequency, 0.8) * amplitude;
 
-        maxValue += amplitude;
+		maxValue += amplitude;
 
-        amplitude *= persistence;
-        frequency *= 2.0;
-    }
+		amplitude *= persistence;
+		frequency *= mLacunarity;
+	}
 
-    return total / maxValue;
+	return total / maxValue;
 }
 
 double PerlinNoise::singleNoise(double x, double y, double z)
@@ -60,17 +64,17 @@ double PerlinNoise::singleNoise(double x, double y, double z)
 	return (res + 1.0) / 2.0;
 }
 
-double PerlinNoise::fade(double t) 
+double PerlinNoise::fade(double t)
 {
 	return t * t * t * (t * (t * 6 - 15) + 10);
 }
 
-double PerlinNoise::lerp(double t, double a, double b) 
+double PerlinNoise::lerp(double t, double a, double b)
 {
 	return a + t * (b - a);
 }
 
-double PerlinNoise::grad(int hash, double x, double y, double z) 
+double PerlinNoise::grad(int hash, double x, double y, double z)
 {
 	int h = hash & 15;
 	// Convert lower 4 bits of hash into 12 gradient directions

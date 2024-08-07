@@ -47,107 +47,104 @@ static LRESULT CALLBACK WndProc(HWND win, UINT msg, WPARAM wp, LPARAM lp) {
 	if (ImGui_ImplWin32_WndProcHandler(win, msg, wp, lp)) {
 		return true;
 	}
-	else {
-		switch (msg)
-		{
-		case WM_DESTROY:
-			PostQuitMessage(0);
-			exit(100);
-			return 0;
+	switch (msg)
+	{
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		exit(100);
+		return 0;
 
-		case WM_CLOSE:
-			DestroyWindow(win);
-			return 0;
+	case WM_CLOSE:
+		DestroyWindow(win);
+		return 0;
 
-		case WM_MOUSEMOVE:
-			if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_AnyWindow) && (wp & MK_RBUTTON)) {
-				HandleMouseMove(lp);
-			}
-			else {
-				lastMouseX = GET_X_LPARAM(lp);
-				lastMouseY = GET_Y_LPARAM(lp);
-			}
-			break;
-
-		case WM_KEYDOWN:
-			switch (wp)
-			{
-			case 'W':
-				g_inputDirections.bFront = true;
-				break;
-
-			case 'S':
-				g_inputDirections.bBack = true;
-				break;
-
-			case 'A':
-				g_inputDirections.bLeft = true;
-				break;
-
-			case 'D':
-				g_inputDirections.bRight = true;
-				break;
-
-			case 'E':
-				g_inputDirections.bUp = true;
-				break;
-			case 'Q':
-				g_inputDirections.bDown = true;
-				break;
-			case '1':
-				g_inputDirections.bMode1 = true;
-				break;
-			case '2':
-				g_inputDirections.bMode2 = true;
-				break;
-			default:
-				break;
-			}
-			break;
-
-		case WM_KEYUP:
-			switch (wp)
-			{
-			case 'W':
-				g_inputDirections.bFront = false;
-				break;
-
-			case 'S':
-				g_inputDirections.bBack = false;
-				break;
-
-			case 'A':
-				g_inputDirections.bLeft = false;
-				break;
-
-			case 'D':
-				g_inputDirections.bRight = false;
-				break;
-
-			case 'E':
-				g_inputDirections.bUp = false;
-				break;
-
-			case 'Q':
-				g_inputDirections.bDown = false;
-				break;
-			case '1':
-				g_inputDirections.bMode1 = false;
-				break;
-			case '2':
-				g_inputDirections.bMode2 = false;
-				break;
-			default:
-				break;
-			}
-			break;
-
-		default:
-			return DefWindowProc(win, msg, wp, lp);
+	case WM_MOUSEMOVE:
+		if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_AnyWindow) && (wp & MK_RBUTTON)) {
+			HandleMouseMove(lp);
 		}
-	}
+		else {
+			lastMouseX = GET_X_LPARAM(lp);
+			lastMouseY = GET_Y_LPARAM(lp);
+		}
+		break;
 
-	return 0;
+	case WM_KEYDOWN:
+		switch (wp)
+		{
+		case 'W':
+			g_inputDirections.bFront = true;
+			break;
+
+		case 'S':
+			g_inputDirections.bBack = true;
+			break;
+
+		case 'A':
+			g_inputDirections.bLeft = true;
+			break;
+
+		case 'D':
+			g_inputDirections.bRight = true;
+			break;
+
+		case 'E':
+			g_inputDirections.bUp = true;
+			break;
+		case 'Q':
+			g_inputDirections.bDown = true;
+			break;
+		case '1':
+			g_inputDirections.bMode1 = true;
+			break;
+		case '2':
+			g_inputDirections.bMode2 = true;
+			break;
+		default:
+			break;
+		}
+		break;
+
+	case WM_KEYUP:
+		switch (wp)
+		{
+		case 'W':
+			g_inputDirections.bFront = false;
+			break;
+
+		case 'S':
+			g_inputDirections.bBack = false;
+			break;
+
+		case 'A':
+			g_inputDirections.bLeft = false;
+			break;
+
+		case 'D':
+			g_inputDirections.bRight = false;
+			break;
+
+		case 'E':
+			g_inputDirections.bUp = false;
+			break;
+
+		case 'Q':
+			g_inputDirections.bDown = false;
+			break;
+		case '1':
+			g_inputDirections.bMode1 = false;
+			break;
+		case '2':
+			g_inputDirections.bMode2 = false;
+			break;
+		default:
+			break;
+		}
+		break;
+
+	default:
+		return DefWindowProc(win, msg, wp, lp);
+	}
+	return ::DefWindowProc(win, msg, wp, lp);
 }
 
 int WINAPI WinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance, _In_ PSTR cmdLine, _In_ int cmdShow) {

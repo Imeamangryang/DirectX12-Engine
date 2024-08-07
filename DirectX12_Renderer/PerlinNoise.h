@@ -1,16 +1,24 @@
-#pragma once
+ï»¿#pragma once
 #include "stdafx.h"
 
-class PerlinNoise 
+class PerlinNoise
 {
 public:
-	PerlinNoise(unsigned int seed = std::default_random_engine::default_seed);
+	PerlinNoise(unsigned int seed = std::default_random_engine::default_seed,
+		float frequency = 1.0f,
+		float amplitude = 1.0f,
+		float lacunarity = 2.0f,
+		float persistence = 0.5f
+		);
 
-    // ¿ÁÅ¸ºê¸¦ °í·ÁÇÑ 2D Perlin Noise »ý¼º
 	double noise(double x, double y, int octaves);
 
 private:
-    std::vector<int> p;
+	float mFrequency;   ///< Frequency ("width") of the first octave of noise (default to 1.0)
+	float mAmplitude;   ///< Amplitude ("height") of the first octave of noise (default to 1.0)
+	float mLacunarity;  ///< Lacunarity specifies the frequency multiplier between successive octaves (default to 2.0).
+	float mPersistence; ///< Persistence is the loss of amplitude between successive octaves (usually 1/lacunarity)
+	std::vector<int> p;
 
 	double singleNoise(double x, double y, double z);
 
