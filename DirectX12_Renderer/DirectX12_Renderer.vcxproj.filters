@@ -132,6 +132,9 @@
     <ClCompile Include="SimplexNoise.cpp">
       <Filter>Source Files\Util</Filter>
     </ClCompile>
+    <ClCompile Include="Skybox.cpp">
+      <Filter>Source Files\World</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OrbitCycle.h">
@@ -218,6 +221,9 @@
     <ClInclude Include="SimplexNoise.h">
       <Filter>Header Files\Util</Filter>
     </ClInclude>
+    <ClInclude Include="Skybox.h">
+      <Filter>Header Files\World</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader.fx">
@@ -227,6 +233,9 @@
       <Filter>Resource Files</Filter>
     </FxCompile>
     <FxCompile Include="VertexShader.hlsl">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="Skybox.fx">
       <Filter>Resource Files</Filter>
     </FxCompile>
   </ItemGroup>

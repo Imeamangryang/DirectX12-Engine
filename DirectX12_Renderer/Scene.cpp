@@ -35,7 +35,8 @@ Scene::Scene(int height, int width, Graphics* renderer) :
 	m_camera(height, width),
 	m_imguiLoader(renderer),
 	m_cube(renderer),
-	m_chunk(renderer, m_camera.GetEyePosition())
+	m_chunk(renderer, m_camera.GetEyePosition()),
+	m_skybox(renderer)
 {
 	m_viewport.TopLeftX = 0;
 	m_viewport.TopLeftY = 0;
@@ -78,6 +79,7 @@ void Scene::Draw()
 	// Object Draw
 	{
 		m_chunk.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
+		m_skybox.Draw(m_renderer->GetCommandList(), m_camera.GetViewProjectionMatrixTransposed(), m_camera.GetEyePosition());
 	}
 
 	ImGui::Render();

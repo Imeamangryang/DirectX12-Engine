@@ -6,6 +6,8 @@
 #include "ImGuiLoader.h"
 #include "Chunk.h"
 
+#include "Skybox.h"
+
 using namespace graphics;
 
 #define SPEED 100.0f
@@ -50,5 +52,5 @@ private:
 
 	Cube m_cube;
 	Chunk m_chunk;
-	vector<Chunk> m_chunks;
+	Skybox m_skybox;
 };

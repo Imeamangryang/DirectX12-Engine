@@ -19,8 +19,9 @@ public:
 	Chunk(Graphics* renderer, XMFLOAT4 cameraPosition);
 	~Chunk();
 
-	BlockType GetBlock(float x, float y, int z);
-	float getSplineValue(float value, std::map<float, float> nodes);
+	BlockType GetBlock(float x, float y, int z, int height);
+	int GetHeight(float x, float y);
+	float GetSplineValue(float value, std::map<float, float> nodes);
 
 	void GenerateChunk(int regionx, int regiony);
 	void Draw(ComPtr<ID3D12GraphicsCommandList>& m_commandList, XMFLOAT4X4& viewproj, XMFLOAT4& eye);
@@ -40,7 +41,7 @@ private:
 	std::vector<std::pair<int, int>> m_chunkMap;
 
 	SimplexNoise continent = SimplexNoise(0.05f, 1, 2, 0.5f);
-	SimplexNoise erosion = SimplexNoise(0.02f, 1, 2, 0.5f);
+	SimplexNoise erosion = SimplexNoise(0.1f, 1, 2, 0.5f);
 	SimplexNoise peaksValleys = SimplexNoise(0.6f, 1, 2, 0.5f);
 
 	PerlinNoise Pcontinent = PerlinNoise(200, 0.05f, 1, 2, 0.5f);

@@ -43,18 +43,13 @@ Chunk::Chunk(Graphics* renderer, XMFLOAT4 cameraPosition)
 	int cameraChunkX = static_cast<int>(cameraPosition.x / (CHUNK_SIZE * 4.0f));
 	int cameraChunkY = static_cast<int>(cameraPosition.y / (CHUNK_SIZE * 4.0f));
 
-	for (int dx = -CHUNK_DISTANCE; dx <= CHUNK_DISTANCE; ++dx)
+	for (int dx = -CHUNK_DISTANCE * 5; dx <= CHUNK_DISTANCE * 5; ++dx)
 	{
-		for (int dy = -CHUNK_DISTANCE; dy <= CHUNK_DISTANCE; ++dy)
+		for (int dy = -CHUNK_DISTANCE * 5; dy <= CHUNK_DISTANCE * 5; ++dy)
 		{
 			int chunkX = cameraChunkX + dx;
 			int chunkY = cameraChunkY + dy;
 
-			// 중복 청크 생성 방지
-			if (std::find(m_chunkMap.begin(), m_chunkMap.end(), std::make_pair(chunkX, chunkY)) != m_chunkMap.end())
-			{
-				continue;
-			}
 			m_chunkMap.push_back(std::make_pair(chunkX, chunkY));
 
 			// Draw할 Chunk 생성
@@ -70,9 +65,23 @@ Chunk::~Chunk()
 {
 }
 
-BlockType Chunk::GetBlock(float x, float y, int z)
+BlockType Chunk::GetBlock(float x, float y, int z, int height)
 {
-	// Simplex Noise
+	if (z < height)
+	{
+		return BlockType::Dirt;
+	}
+	else if (z < 30) {
+		return BlockType::Stone;
+	}
+	else
+	{
+		return BlockType::Air;
+	}
+}
+
+int Chunk::GetHeight(float x, float y)
+{
 	float continentalness = continent.fractal(4, x, y);
 	float erosioness = erosion.fractal(5, x, y);
 	float peaksValleyness = peaksValleys.fractal(4, x, y);
@@ -84,21 +93,14 @@ BlockType Chunk::GetBlock(float x, float y, int z)
 
 	float height = 0;
 
-	height = getSplineValue(continentalness, ContinentalnessNodes);
-	height += getSplineValue(erosioness, ErosionNodes);
-	height += getSplineValue(peaksValleyness, PeakValleysNodes);
+	height = GetSplineValue(continentalness, ContinentalnessNodes);
+	height += GetSplineValue(erosioness, ErosionNodes);
+	height += GetSplineValue(peaksValleyness, PeakValleysNodes);
 
-	if (z < height)
-	{
-		return BlockType::Dirt;
-	}
-	else
-	{
-		return BlockType::Air;
-	}
+	return (int)height;
 }
 
-float Chunk::getSplineValue(float value, std::map<float, float> nodes)
+float Chunk::GetSplineValue(float value, std::map<float, float> nodes)
 {
 	float min = 0;
 	float max = 0;
@@ -138,17 +140,45 @@ void Chunk::GenerateChunk(int regionx, int regiony)
 	{
 		for (int y = 0; y < CHUNK_SIZE; y++)
 		{
-			for (int z = 0; z < 255; z++)
-			{
-				XMFLOAT4X4 world = MathHelper::Identity4x4();
-				XMStoreFloat4x4(&world, XMMatrixTranslation(x * 4.0f + (regionx * 64), y * 4.0f + (regiony * 64), z * 4.0f));
-				data.world = world;
-				data.blockType = (UINT)GetBlock((x + (regionx * 16)) * 0.016f, (y + (regiony * 16)) * 0.016f, z);
-				data.isvisible = true;
-				if (data.blockType != (UINT)BlockType::Air) {
-					instanceData.push_back(data);
+			int ChunkHeight = GetHeight((x + (regionx * 16)) * 0.016f, (y + (regiony * 16)) * 0.016f);
+			if (ChunkHeight < 30) {
+				for (int z = 30; z > ChunkHeight - 5; z--)
+				{
+					XMFLOAT4X4 world = MathHelper::Identity4x4();
+					XMStoreFloat4x4(&world, XMMatrixTranslation(x * 4.0f + (regionx * 64), y * 4.0f + (regiony * 64), z * 4.0f));
+					data.world = world;
+					data.blockType = (UINT)GetBlock((x + (regionx * 16)) * 0.06f, (y + (regiony * 16)) * 0.06f, z, ChunkHeight);
+					data.isvisible = true;
+					if (data.blockType != (UINT)BlockType::Air) {
+						instanceData.push_back(data);
+					}
 				}
 			}
+			else {
+				for (int z = ChunkHeight; z > ChunkHeight - 5; z--)
+				{
+					XMFLOAT4X4 world = MathHelper::Identity4x4();
+					XMStoreFloat4x4(&world, XMMatrixTranslation(x * 4.0f + (regionx * 64), y * 4.0f + (regiony * 64), z * 4.0f));
+					data.world = world;
+					data.blockType = (UINT)GetBlock((x + (regionx * 16)) * 0.06f, (y + (regiony * 16)) * 0.06f, z, ChunkHeight);
+					data.isvisible = true;
+					if (data.blockType != (UINT)BlockType::Air) {
+						instanceData.push_back(data);
+					}
+				}
+			}
+			
+			//for (int z = 0; z < 255; z++)
+			//{
+			//	XMFLOAT4X4 world = MathHelper::Identity4x4();
+			//	XMStoreFloat4x4(&world, XMMatrixTranslation(x * 4.0f + (regionx * 64), y * 4.0f + (regiony * 64), z * 4.0f));
+			//	data.world = world;
+			//	data.blockType = (UINT)GetBlock((x + (regionx * 16)) * 0.016f, (y + (regiony * 16)) * 0.016f, z, ChunkHeight);
+			//	data.isvisible = true;
+			//	if (data.blockType != (UINT)BlockType::Air) {
+			//		instanceData.push_back(data);
+			//	}
+			//}
 		}
 	}
 }
@@ -163,8 +193,8 @@ void Chunk::Draw(ComPtr<ID3D12GraphicsCommandList>& m_commandList, XMFLOAT4X4& v
 void Chunk::UpdateChunks(XMFLOAT4 cameraPosition)
 {
 	// 카메라 위치를 기준으로 청크를 생성
-	int cameraChunkX = static_cast<int>(cameraPosition.x / (CHUNK_SIZE * 4.0f));
-	int cameraChunkY = static_cast<int>(cameraPosition.y / (CHUNK_SIZE * 4.0f));
+	int cameraChunkX = static_cast<int>(cameraPosition.x / (CHUNK_SIZE * 2));
+	int cameraChunkY = static_cast<int>(cameraPosition.y / (CHUNK_SIZE * 2));
 
 	for (int dx = -CHUNK_DISTANCE; dx <= CHUNK_DISTANCE; ++dx)
 	{

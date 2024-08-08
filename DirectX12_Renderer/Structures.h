@@ -27,9 +27,6 @@ struct SkyConstantBuffer
 {
 	XMFLOAT4X4 world;
 	XMFLOAT4X4 viewproj;
-	XMFLOAT4 eye;
-	UINT height;
-	UINT width;
 };
 
 struct Vertex
