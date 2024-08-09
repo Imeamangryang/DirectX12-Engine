@@ -3,6 +3,7 @@
 Texture2D<float4> T_dirt : register(t0);
 Texture2D<float4> T_stone : register(t1);
 Texture2D<float4> T_cobblestone : register(t2);
+Texture2D<float4> T_water : register(t3);
 SamplerState dmsampler : register(s0);
 SamplerState cmsampler : register(s1);
 
@@ -51,7 +52,7 @@ struct InstanceBuffer
     bool isvisible;
 };
 
-StructuredBuffer<InstanceBuffer> instanceTransforms : register(t3); // 인스턴스 변환 행렬
+StructuredBuffer<InstanceBuffer> instanceTransforms : register(t4); // 인스턴스 변환 행렬
 
 // blocktype에 따라 다른 색상을 가지도록 설정
 float4 GetColor(int blocktype, float2 tex)
@@ -60,6 +61,7 @@ float4 GetColor(int blocktype, float2 tex)
     else if (blocktype == 1) return float4(T_dirt.Sample(cmsampler, tex));
     else if (blocktype == 2) return float4(T_stone.Sample(cmsampler, tex));
     else if (blocktype == 3) return float4(T_cobblestone.Sample(cmsampler, tex));
+    else if (blocktype == 5) return float4(T_water.Sample(cmsampler, tex));
     else return float4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 

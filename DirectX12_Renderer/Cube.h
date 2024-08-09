@@ -80,4 +80,5 @@ private:
 	std::shared_ptr<Texture> m_Tdirt;
 	std::shared_ptr<Texture> m_Tstone;
 	std::shared_ptr<Texture> m_Tcobblestone;
+	std::shared_ptr<Texture> m_Twater;
 };

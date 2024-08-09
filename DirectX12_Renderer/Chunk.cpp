@@ -56,7 +56,6 @@ Chunk::Chunk(Graphics* renderer, XMFLOAT4 cameraPosition)
 			m_blocks.push_back(Cube(m_renderer));
 			GenerateChunk(chunkX, chunkY);
 			m_blocks.back().CreateInstanceBuffer(m_renderer, instanceData);
-			printf("test");
 		}
 	}
 }
@@ -69,10 +68,14 @@ BlockType Chunk::GetBlock(float x, float y, int z, int height)
 {
 	if (z < height)
 	{
+		return BlockType::Stone;
+	}
+	else if (z == height)
+	{
 		return BlockType::Dirt;
 	}
 	else if (z < 30) {
-		return BlockType::Stone;
+		return BlockType::Water;
 	}
 	else
 	{
@@ -170,6 +173,7 @@ void Chunk::GenerateChunk(int regionx, int regiony)
 			
 			//for (int z = 0; z < 255; z++)
 			//{
+			//	int ChunkHeight = GetHeight((x + (regionx * 16)) * 0.016f, (y + (regiony * 16)) * 0.016f);
 			//	XMFLOAT4X4 world = MathHelper::Identity4x4();
 			//	XMStoreFloat4x4(&world, XMMatrixTranslation(x * 4.0f + (regionx * 64), y * 4.0f + (regiony * 64), z * 4.0f));
 			//	data.world = world;

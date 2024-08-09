@@ -44,10 +44,10 @@ void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
 	m_commandList->SetDescriptorHeaps(_countof(heaps), heaps);
-	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 3, m_srvDescSize);
+	CD3DX12_GPU_DESCRIPTOR_HANDLE cbvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_srvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(1, cbvHandle);
-	m_commandList->SetGraphicsRootDescriptorTable(0, m_Tdirt->GetGPUHandle()); // t0 : CubeMap , t1 : NormalMap, t2 : HeightMap
-	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 4, m_srvDescSize);
+	m_commandList->SetGraphicsRootDescriptorTable(0, m_Tdirt->GetGPUHandle()); // t0 : Dirt , t1 : Stone, t2 : HeightMap. t3 : Water
+	CD3DX12_GPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetGPUDescriptorHandleForHeapStart(), 5, m_srvDescSize);
 	m_commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
 
 	m_commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // describe how to read the vertex buffer.
@@ -77,8 +77,9 @@ void Cube::CreateDescriptorHeap(Graphics* Renderer)
 
 	// Texture 로딩
 	m_Tdirt = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/dirt.png", 0);
-	m_Tstone = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/water.png", 1);
+	m_Tstone = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/stone.png", 1);
 	m_Tcobblestone = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/cobblestone.png", 2);
+	m_Twater = std::make_shared<Texture>(Renderer, m_srvHeap, L"resource/textures/blocks/water.png", 3);
 
 	// ConstantBuffer 생성
 	UINT64 bufferSize = sizeof(ConstantBuffer);
@@ -90,7 +91,7 @@ void Cube::CreateDescriptorHeap(Graphics* Renderer)
 	cbvDesc.BufferLocation = m_CBV->GetGPUVirtualAddress();
 	cbvDesc.SizeInBytes = (bufferSize + 255) & ~255; // Constant Buffer는 256 byte aligned
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 3, m_srvDescSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 4, m_srvDescSize);
 
 	Renderer->CreateCBV(&cbvDesc, srvHandle);
 
@@ -129,7 +130,7 @@ void Cube::InitPipeline(Graphics* Renderer)
 	CD3DX12_DESCRIPTOR_RANGE range[3];
 	CD3DX12_ROOT_PARAMETER paramsRoot[3];
 	// Slot : Displacement Map, Register(t0)
-	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 3, 0, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND); // t0, t1, t2
+	range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 4, 0, 0, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND); // t0, t1, t2. t3
 	paramsRoot[0].InitAsDescriptorTable(1, &range[0], D3D12_SHADER_VISIBILITY_ALL);
 
 	// ConstantBufferview를 위한 Root Parameter
@@ -137,7 +138,7 @@ void Cube::InitPipeline(Graphics* Renderer)
 	paramsRoot[1].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_ALL);
 
 	// InstanceBufferView를 위한 Root Parameter
-	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3); // t3
+	range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4); // t4
 	paramsRoot[2].InitAsDescriptorTable(1, &range[2], D3D12_SHADER_VISIBILITY_ALL);
 
 	CD3DX12_STATIC_SAMPLER_DESC descSamplers[2];
@@ -348,7 +349,7 @@ void Cube::CreateInstanceBuffer(Graphics* renderer, const std::vector<InstanceBu
 	srvDesc.Buffer.StructureByteStride = sizeof(InstanceBuffer);
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandleInstance(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 4, m_srvDescSize);
+	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandleInstance(m_srvHeap->GetCPUDescriptorHandleForHeapStart(), 5, m_srvDescSize);
 
 	renderer->CreateSRV(m_StructuredBuffer.Get(), &srvDesc, srvHandleInstance);
 }
