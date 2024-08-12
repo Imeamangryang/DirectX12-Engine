@@ -1,9 +1,6 @@
 #define NUM_CONTROL_POINTS 3
+Texture2D Tex_table[300] : register(t0);
 
-Texture2D<float4> T_dirt : register(t0);
-Texture2D<float4> T_stone : register(t1);
-Texture2D<float4> T_cobblestone : register(t2);
-Texture2D<float4> T_water : register(t3);
 SamplerState dmsampler : register(s0);
 SamplerState cmsampler : register(s1);
 
@@ -58,10 +55,10 @@ StructuredBuffer<InstanceBuffer> instanceTransforms : register(t4); // 인스턴스 
 float4 GetColor(int blocktype, float2 tex)
 {
     if (blocktype == 0) return float4(1.0f, 0.0f, 0.0f, 1.0f);
-    else if (blocktype == 1) return float4(T_dirt.Sample(cmsampler, tex));
-    else if (blocktype == 2) return float4(T_stone.Sample(cmsampler, tex));
-    else if (blocktype == 3) return float4(T_cobblestone.Sample(cmsampler, tex));
-    else if (blocktype == 5) return float4(T_water.Sample(cmsampler, tex));
+    else if (blocktype == 1) return float4(Tex_table[0].Sample(cmsampler, tex));
+    else if (blocktype == 2) return float4(Tex_table[1].Sample(cmsampler, tex));
+    else if (blocktype == 3) return float4(Tex_table[2].Sample(cmsampler, tex));
+    else if (blocktype == 5) return float4(Tex_table[3].Sample(cmsampler, tex));
     else return float4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
