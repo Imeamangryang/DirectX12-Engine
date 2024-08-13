@@ -52,6 +52,7 @@ XMFLOAT4X4 Camera::GetViewProjectionMatrixTransposed()
 	XMVECTOR camera = XMLoadFloat4(&m_pos);
 	XMVECTOR target = camera + look; 
 	XMMATRIX view = XMMatrixLookAtLH(camera, target, up);
+	m_view = view;
 
 	XMMATRIX proj = XMLoadFloat4x4(&m_projection);
 	XMMATRIX viewproj = XMMatrixTranspose(view * proj);

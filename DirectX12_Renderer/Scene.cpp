@@ -138,6 +138,41 @@ void Scene::HandleMouseInput(float x, float y)
 	m_camera.Yaw(-ROT_ANGLE * x);
 }
 
+void Scene::HandleMouseClick(float x, float y)
+{
+	XMMATRIX projMatrix = XMLoadFloat4x4(&m_camera.GetProjectionMatrix());
+
+	float NDC_x = ((2.0f * x) / m_viewport.Width - 1.0f) / m_camera.GetProjectionMatrix()._11;
+	float NDC_y = ((-2.0F * y) / m_viewport.Height + 1.0f) / m_camera.GetProjectionMatrix()._22;
+
+	// View Space에서의 Ray
+	Vector3 rayOrigin = Vector3(0.0f, 0.0f, 0.0f);
+	Vector3 rayDir = Vector3(NDC_x, NDC_y, 1.0f);
+
+	XMMATRIX view = m_camera.GetViewMatrix();
+	XMMATRIX viewInv = XMMatrixTranspose(m_camera.GetViewMatrix());
+	//XMMATRIX viewInv = XMMatrixInverse(&XMMatrixDeterminant(view), view);
+	
+	XMMATRIX viewproj = XMLoadFloat4x4(&m_camera.GetViewProjectionMatrixTransposed());
+	// World Space에서의 Ray
+	Vector3 worldRayOrigin = XMVector3TransformCoord(rayOrigin, viewInv);
+	Vector3 worldRayDir = XMVector2TransformNormal(rayDir, viewInv);
+
+	worldRayDir.Normalize();
+
+	// Ray 생성
+	Ray picking_ray(worldRayOrigin, worldRayDir);
+
+	// Cube와의 충돌 검사
+	float closest_distance = FLT_MAX;
+
+	float distance = 0.0f;
+	for(auto& cube : m_chunk.GetBlocks())
+	{
+		cube.SetPicked(true);
+	}
+}
+
 void Scene::CloseCommandList()
 {
 	if (FAILED(m_renderer->GetCommandList()->Close()))

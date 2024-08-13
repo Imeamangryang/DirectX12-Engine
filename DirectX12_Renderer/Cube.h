@@ -35,6 +35,10 @@ public:
 	void CreateInstanceBuffer(Graphics* renderer, const std::vector<InstanceBuffer> instanceData);
 	void UpdateInstanceBuffer(const std::vector<InstanceBuffer> instanceData);
 
+	DirectX::BoundingBox GetBoundingBox();
+	bool Intersects(DirectX::SimpleMath::Ray ray, float& distance);
+	void SetPicked(bool ispicked) { isPicked = !isPicked; }
+
 private:
 	void CreateDescriptorHeap(Graphics* Renderer);
 
@@ -81,4 +85,8 @@ private:
 	std::shared_ptr<Texture> m_Tstone;
 	std::shared_ptr<Texture> m_Tcobblestone;
 	std::shared_ptr<Texture> m_Twater;
+
+	// Colider Box
+	DirectX::BoundingBox m_boundingBox;
+	bool isPicked = false;
 };

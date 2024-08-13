@@ -9,6 +9,7 @@
 #include "Skybox.h"
 
 using namespace graphics;
+using namespace DirectX::SimpleMath;
 
 #define SPEED 100.0f
 #define ROT_ANGLE 0.75f
@@ -36,6 +37,8 @@ public:
 	void HandleInput(const InputDirections& directions, float deltaTime);
 
 	void HandleMouseInput(float x, float y);
+
+	void HandleMouseClick(float x, float y);
 
 private:
 	void CloseCommandList();

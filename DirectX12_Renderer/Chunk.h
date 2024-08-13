@@ -11,7 +11,7 @@
 using namespace graphics;
 
 static const int CHUNK_SIZE = 16;
-static const int CHUNK_DISTANCE = 2;
+static const int CHUNK_DISTANCE = 1;
 
 class Chunk
 {
@@ -30,6 +30,7 @@ public:
 	float GetContinentNoise(float x, float y) { return continent.fractal(4, x * 0.016f, y * 0.016f); }
 	float GetErosionNoise(float x, float y) { return erosion.fractal(5, x * 0.016f, y * 0.016f); }
 	float GetPeaksValleysNoise(float x, float y) { return peaksValleys.fractal(4, x * 0.016f, y * 0.016f); }
+	std::vector<Cube>& GetBlocks() { return m_blocks; }
 
 	//float GetContinentNoise(float x, float y) { return continent.noise(x * 0.016f, y * 0.016f, 4); }
 	//float GetErosionNoise(float x, float y) { return erosion.noise(x * 0.016f, y * 0.016f, 5); }

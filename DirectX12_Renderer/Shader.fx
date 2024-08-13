@@ -40,6 +40,7 @@ cbuffer ConstantBuffer : register(b0)
     float4x4 viewproj;
     float4 eye;
     LightData light;
+    bool ispicking;
 }
 
 struct InstanceBuffer
@@ -87,7 +88,10 @@ VS_OUTPUT VS(VS_INPUT input)
 // Pixel shader
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
-    
+    if (ispicking == true)
+    {
+        return float4(1.0f, 1.0f, 1.0f, 1.0f);
+    }
     //float3 norm = normalmap.Sample(cmsampler, input.tex).xyz + input.norm;
     float3 norm = input.norm;
     norm = normalize(norm);

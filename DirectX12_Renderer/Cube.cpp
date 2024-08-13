@@ -40,6 +40,7 @@ void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 	m_constantBufferData.viewproj = viewproj;
 	m_constantBufferData.eye = eye;
 	m_constantBufferData.light = m_light.GetDirectionalLight();
+	m_constantBufferData.ispicking = isPicked;
 	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
@@ -54,13 +55,7 @@ void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 	m_commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
 	m_commandList->IASetIndexBuffer(&m_indexBufferView);
 
-	//m_commandList->BeginQuery(m_queryHeap.Get(), D3D12_QUERY_TYPE_BINARY_OCCLUSION, 0);
 	m_commandList->DrawIndexedInstanced(36, instanceCount, 0, 0, 0);
-	//m_commandList->EndQuery(m_queryHeap.Get(), D3D12_QUERY_TYPE_BINARY_OCCLUSION, 0);
-
-	//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_queryResultBuffer.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_COPY_DEST));
-	//m_commandList->ResolveQueryData(m_queryHeap.Get(), D3D12_QUERY_TYPE_BINARY_OCCLUSION, 0, 1, m_queryResultBuffer.Get(), 0);
-	//m_commandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(m_queryResultBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_GENERIC_READ));
 }
 
 void Cube::CreateDescriptorHeap(Graphics* Renderer)
@@ -198,24 +193,6 @@ void Cube::InitPipeline(Graphics* Renderer)
 	psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
 	Renderer->createPSO(&psoDesc, m_pipelineStateWireframe);
 	m_pipelineStateWireframe->SetName(L"Cube Wireframe Pipeline State");
-
-	//// ExecuteIndirect 명령에 전달되는 데이터 해석 방법을 GPU에게 알려주는 Root Signature.
-	//{
-	//	// Each command consists of a CBV update and a DrawInstanced call.
-	//	D3D12_INDIRECT_ARGUMENT_DESC argumentDescs[2] = {};
-	//	argumentDescs[0].Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
-	//	argumentDescs[0].ConstantBufferView.RootParameterIndex = Cbv;
-	//	argumentDescs[1].Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
-
-	//	D3D12_COMMAND_SIGNATURE_DESC commandSignatureDesc = {};
-	//	commandSignatureDesc.pArgumentDescs = argumentDescs;
-	//	commandSignatureDesc.NumArgumentDescs = _countof(argumentDescs);
-	//	commandSignatureDesc.ByteStride = sizeof(IndirectCommand);
-
-	//	Renderer->GetDevice()->CreateCommandSignature(&commandSignatureDesc, m_rootSignature.Get(), IID_PPV_ARGS(&m_commandSignature));
-	//	m_commandSignature->SetName(L"Cube Command Signature");
-	//}
-
 }
 
 void Cube::LoadMesh(Graphics* Renderer)
@@ -318,6 +295,23 @@ void Cube::LoadMesh(Graphics* Renderer)
 	m_indexBufferView.BufferLocation = m_indexBuffer->GetGPUVirtualAddress();
 	m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	m_indexBufferView.SizeInBytes = ibByteSize;
+
+	// Bounding Box 생성
+	DirectX::SimpleMath::Vector3 minCorner = vertices[0].Position;
+	DirectX::SimpleMath::Vector3 maxCorner = vertices[0].Position;
+
+
+	for (UINT64 i = 1, size = vertices.size(); i < size; ++i)
+	{
+		minCorner = DirectX::SimpleMath::Vector3::Min(minCorner, vertices[i].Position);
+		maxCorner = DirectX::SimpleMath::Vector3::Max(maxCorner, vertices[i].Position);
+	}
+
+	DirectX::SimpleMath::Vector3 center = (minCorner + maxCorner) * 0.5f;
+	DirectX::SimpleMath::Vector3 extents = maxCorner - center;
+
+	m_boundingBox.Center = center;
+	m_boundingBox.Extents = extents;
 }
 
 void Cube::CreateInstanceBuffer(Graphics* renderer, const std::vector<InstanceBuffer> instanceData)
@@ -360,4 +354,14 @@ void Cube::UpdateInstanceBuffer(const std::vector<InstanceBuffer> instanceData)
 	UINT64 instanceBufferSize = sizeof(InstanceBuffer) * instanceData.size();
 
 	memcpy(m_StructuredBufferDataBegin, instanceData.data(), instanceBufferSize);
+}
+
+DirectX::BoundingBox Cube::GetBoundingBox()
+{
+	return m_boundingBox;
+}
+
+bool Cube::Intersects(DirectX::SimpleMath::Ray ray, float& distance)
+{
+	return m_boundingBox.Intersects(ray.position, ray.direction, distance);
 }

@@ -16,3 +16,4 @@
 #include "DirectXColors.h"
 #include "Renderer.h"
 #include "random"
+#include "SimpleMath.h"

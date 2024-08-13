@@ -67,6 +67,11 @@ static LRESULT CALLBACK WndProc(HWND win, UINT msg, WPARAM wp, LPARAM lp) {
 			lastMouseY = GET_Y_LPARAM(lp);
 		}
 		break;
+	case WM_LBUTTONDOWN:
+		if (!ImGui::IsWindowHovered(ImGuiHoveredFlags_::ImGuiHoveredFlags_AnyWindow)) {
+			pScene->HandleMouseClick(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
+		}
+		break;
 
 	case WM_KEYDOWN:
 		switch (wp)

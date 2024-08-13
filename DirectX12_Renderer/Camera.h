@@ -11,8 +11,11 @@ public:
 	~Camera();
 
 	XMFLOAT4X4 GetViewProjectionMatrixTransposed();
+	XMFLOAT4X4 GetProjectionMatrix() { return m_projection; }
+	XMMATRIX GetViewMatrix() { return m_view; }
 
 	XMFLOAT4 GetEyePosition() { return m_pos; }
+	
 
 	XMFLOAT4 Translate(XMFLOAT3 move);
 
@@ -24,6 +27,7 @@ public:
 
 private:
 	XMFLOAT4X4 m_projection;
+	XMMATRIX m_view;
 	XMFLOAT4 m_pos;
 	XMFLOAT4 m_lookat;
 	XMFLOAT4 m_up;
