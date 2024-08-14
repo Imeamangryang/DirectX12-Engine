@@ -11,7 +11,7 @@
 using namespace graphics;
 
 static const int CHUNK_SIZE = 16;
-static const int CHUNK_DISTANCE = 1;
+static const int CHUNK_DISTANCE = 2;
 
 class Chunk
 {

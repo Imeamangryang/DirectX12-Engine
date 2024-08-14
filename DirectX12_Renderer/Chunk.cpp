@@ -58,6 +58,21 @@ Chunk::Chunk(Graphics* renderer, XMFLOAT4 cameraPosition)
 			m_blocks.back().CreateInstanceBuffer(m_renderer, instanceData);
 		}
 	}
+	//for (int dx = -CHUNK_DISTANCE; dx <= CHUNK_DISTANCE; ++dx)
+	//{
+	//	for (int dy = -CHUNK_DISTANCE; dy <= CHUNK_DISTANCE; ++dy)
+	//	{
+	//		int chunkX = cameraChunkX + dx;
+	//		int chunkY = cameraChunkY + dy;
+
+	//		m_chunkMap.push_back(std::make_pair(chunkX, chunkY));
+
+	//		// DrawÇÒ Chunk »ý¼º
+	//		m_blocks.push_back(Cube(m_renderer));
+	//		GenerateChunk(chunkX, chunkY);
+	//		m_blocks.back().CreateInstanceBuffer(m_renderer, instanceData);
+	//	}
+	//}
 }
 
 Chunk::~Chunk()
@@ -151,7 +166,7 @@ void Chunk::GenerateChunk(int regionx, int regiony)
 					XMStoreFloat4x4(&world, XMMatrixTranslation(x * 4.0f + (regionx * 64), y * 4.0f + (regiony * 64), z * 4.0f));
 					data.world = world;
 					data.blockType = (UINT)GetBlock((x + (regionx * 16)) * 0.06f, (y + (regiony * 16)) * 0.06f, z, ChunkHeight);
-					data.isvisible = true;
+					data.isvisible = false;
 					if (data.blockType != (UINT)BlockType::Air) {
 						instanceData.push_back(data);
 					}
@@ -164,7 +179,7 @@ void Chunk::GenerateChunk(int regionx, int regiony)
 					XMStoreFloat4x4(&world, XMMatrixTranslation(x * 4.0f + (regionx * 64), y * 4.0f + (regiony * 64), z * 4.0f));
 					data.world = world;
 					data.blockType = (UINT)GetBlock((x + (regionx * 16)) * 0.06f, (y + (regiony * 16)) * 0.06f, z, ChunkHeight);
-					data.isvisible = true;
+					data.isvisible = false;
 					if (data.blockType != (UINT)BlockType::Air) {
 						instanceData.push_back(data);
 					}

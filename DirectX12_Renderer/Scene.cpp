@@ -140,36 +140,59 @@ void Scene::HandleMouseInput(float x, float y)
 
 void Scene::HandleMouseClick(float x, float y)
 {
-	XMMATRIX projMatrix = XMLoadFloat4x4(&m_camera.GetProjectionMatrix());
+	float screen_x = (2.0f * x / m_viewport.Width) - 1.0f;
+	float screen_y = (-2.0F * y / m_viewport.Height) + 1.0f;
 
-	float NDC_x = ((2.0f * x) / m_viewport.Width - 1.0f) / m_camera.GetProjectionMatrix()._11;
-	float NDC_y = ((-2.0F * y) / m_viewport.Height + 1.0f) / m_camera.GetProjectionMatrix()._22;
-
-	// View Space에서의 Ray
-	Vector3 rayOrigin = Vector3(0.0f, 0.0f, 0.0f);
-	Vector3 rayDir = Vector3(NDC_x, NDC_y, 1.0f);
-
-	XMMATRIX view = m_camera.GetViewMatrix();
-	XMMATRIX viewInv = XMMatrixTranspose(m_camera.GetViewMatrix());
-	//XMMATRIX viewInv = XMMatrixInverse(&XMMatrixDeterminant(view), view);
+	Vector3 clipSpaceCoord = Vector3(screen_x, screen_y, 0);
+	Vector3 viewSpaceCoord = XMVector3TransformCoord(clipSpaceCoord, XMMatrixInverse(nullptr, XMLoadFloat4x4(&m_camera.GetProjectionMatrix())));
+	Vector3 worldSpaceCoord = XMVector3TransformCoord(viewSpaceCoord, XMMatrixInverse(nullptr, m_camera.GetViewMatrix()));
 	
-	XMMATRIX viewproj = XMLoadFloat4x4(&m_camera.GetViewProjectionMatrixTransposed());
-	// World Space에서의 Ray
-	Vector3 worldRayOrigin = XMVector3TransformCoord(rayOrigin, viewInv);
-	Vector3 worldRayDir = XMVector2TransformNormal(rayDir, viewInv);
+	Vector3 rayDir = worldSpaceCoord - Vector3(XMLoadFloat4(&m_camera.GetEyePosition()));
+	rayDir.Normalize();
 
-	worldRayDir.Normalize();
+	const Vector3 camPosV3 = Vector3(XMLoadFloat4(&m_camera.GetEyePosition()));
 
-	// Ray 생성
-	Ray picking_ray(worldRayOrigin, worldRayDir);
+	Ray picking_ray(camPosV3, rayDir);
+
+	//// View Space에서의 Ray
+	//Vector3 rayOrigin = Vector3(0.0f, 0.0f, 0.0f);
+	//Vector3 rayDir = Vector3(viewSpaceCoord.x, viewSpaceCoord.y, 1.0f);
+
+	//Matrix view = m_camera.GetViewMatrix();
+	//Matrix viewInv = view.Invert();
+	//
+	//// World Space에서의 Ray
+	//Vector3 worldRayOrigin = XMVector3TransformCoord(rayOrigin, viewInv);
+	//Vector3 worldRayDir = XMVector3TransformNormal(rayDir, viewInv);
+
+	//worldRayDir.Normalize();
+
+	//// Ray 생성
+	//Ray picking_ray(worldRayOrigin, worldRayDir);
 
 	// Cube와의 충돌 검사
 	float closest_distance = FLT_MAX;
-
+	float closest_chunk_distance = FLT_MAX;
 	float distance = 0.0f;
+
+	Cube* closest_cube = nullptr;
+
 	for(auto& cube : m_chunk.GetBlocks())
 	{
-		cube.SetPicked(true);
+		// Cube들중 가장 작은 distance를 가진 Cube 찾는다.
+		if (cube.Intersects(picking_ray, distance, closest_distance))
+		{
+			if (closest_distance < closest_chunk_distance)
+			{
+				closest_chunk_distance = closest_distance;
+				closest_cube = &cube;
+			}
+		}
+	}
+
+	if (closest_cube != nullptr)
+	{
+		closest_cube->SetIntersectBlock(picking_ray);
 	}
 }
 

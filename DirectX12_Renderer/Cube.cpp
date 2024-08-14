@@ -308,7 +308,7 @@ void Cube::LoadMesh(Graphics* Renderer)
 	}
 
 	DirectX::SimpleMath::Vector3 center = (minCorner + maxCorner) * 0.5f;
-	DirectX::SimpleMath::Vector3 extents = maxCorner - center;
+	DirectX::SimpleMath::Vector3 extents = (maxCorner - center);
 
 	m_boundingBox.Center = center;
 	m_boundingBox.Extents = extents;
@@ -316,6 +316,8 @@ void Cube::LoadMesh(Graphics* Renderer)
 
 void Cube::CreateInstanceBuffer(Graphics* renderer, const std::vector<InstanceBuffer> instanceData)
 {
+	m_instanceData.clear();
+	m_instanceData = instanceData;
 	// 인스턴스 데이터 크기 계산
 	UINT64 instanceBufferSize = sizeof(InstanceBuffer) * instanceData.size();
 	instanceCount = static_cast<UINT>(instanceData.size());
@@ -350,18 +352,66 @@ void Cube::CreateInstanceBuffer(Graphics* renderer, const std::vector<InstanceBu
 
 void Cube::UpdateInstanceBuffer(const std::vector<InstanceBuffer> instanceData)
 {
+	m_instanceData.clear();
+	m_instanceData = instanceData;
 	// 인스턴스 데이터 크기 계산
 	UINT64 instanceBufferSize = sizeof(InstanceBuffer) * instanceData.size();
 
 	memcpy(m_StructuredBufferDataBegin, instanceData.data(), instanceBufferSize);
 }
 
-DirectX::BoundingBox Cube::GetBoundingBox()
+bool Cube::Intersects(DirectX::SimpleMath::Ray ray, float& distance, float& mindistance)
 {
-	return m_boundingBox;
+	// Bounding Box와 Ray의 교차 검사
+	// 인스턴스 데이터를 순회하며 교차 검사
+	for (auto& instance : m_instanceData)
+	{
+		DirectX::BoundingBox instanceAABB = m_boundingBox;
+		instanceAABB.Center = XMFLOAT3(instance.world._41 * 0.5 + m_boundingBox.Center.x, instance.world._42 * 0.5 + m_boundingBox.Center.y, instance.world._43 * 0.5 + m_boundingBox.Center.z) ;
+
+		if (instanceAABB.Intersects(ray.position, ray.direction, distance))
+		{
+			if (distance < mindistance)
+			{
+				mindistance = distance;
+			}
+		}
+	}
+
+	return true;
 }
 
-bool Cube::Intersects(DirectX::SimpleMath::Ray ray, float& distance)
+void Cube::SetIntersectBlock(DirectX::SimpleMath::Ray ray)
 {
-	return m_boundingBox.Intersects(ray.position, ray.direction, distance);
+	float mindistance = FLT_MAX;
+	float distance = 0;
+
+	InstanceBuffer* closestInstance = nullptr;
+
+	for (auto& instance : m_instanceData)
+	{
+		DirectX::BoundingBox instanceAABB = m_boundingBox;
+		instanceAABB.Center = XMFLOAT3(instance.world._41 * 0.5 + m_boundingBox.Center.x, instance.world._42 * 0.5 + m_boundingBox.Center.y, instance.world._43 * 0.5 + m_boundingBox.Center.z);
+
+		if (instanceAABB.Intersects(ray.position, ray.direction, distance))
+		{
+			if (distance < mindistance)
+			{
+				mindistance = distance;
+				closestInstance = &instance;
+			}
+		}
+	}
+
+	if (closestInstance != nullptr)
+	{
+		closestInstance->isvisible = true;	
+	}
+
+	m_instanceData.erase(
+		std::remove_if(m_instanceData.begin(), m_instanceData.end(), [](InstanceBuffer& instance) { return instance.isvisible == true; }),
+		m_instanceData.end());
+
+	UINT64 instanceBufferSize = sizeof(InstanceBuffer) * m_instanceData.size();
+	memcpy(m_StructuredBufferDataBegin, m_instanceData.data(), instanceBufferSize);
 }

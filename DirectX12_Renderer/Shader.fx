@@ -88,11 +88,10 @@ VS_OUTPUT VS(VS_INPUT input)
 // Pixel shader
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
-    if (ispicking == true)
+    if(instanceTransforms[input.instanceID].isvisible == 1)
     {
-        return float4(1.0f, 1.0f, 1.0f, 1.0f);
+        return float4(1.0f, 0.0f, 0.0f, 1.0f);
     }
-    //float3 norm = normalmap.Sample(cmsampler, input.tex).xyz + input.norm;
     float3 norm = input.norm;
     norm = normalize(norm);
     

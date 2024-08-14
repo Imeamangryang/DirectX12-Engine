@@ -5,7 +5,7 @@ Camera::Camera(int height, int width)
 	m_Yaw = m_Pitch = m_Roll = 0.0f;
 
 	// Projection Matrix 설정
-	XMMATRIX viewproj = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), (float)width / (float)height, 0.1f, 100000.0f);
+	XMMATRIX viewproj = XMMatrixPerspectiveFovLH(XMConvertToRadians(45.0f), (float)width / (float)height, 1.0f, 1000000.0f);
 	XMStoreFloat4x4(&m_projection, viewproj);
 
 	// 카메라의 Position, Look, Up vector 설정

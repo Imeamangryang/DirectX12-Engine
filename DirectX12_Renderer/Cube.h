@@ -35,8 +35,8 @@ public:
 	void CreateInstanceBuffer(Graphics* renderer, const std::vector<InstanceBuffer> instanceData);
 	void UpdateInstanceBuffer(const std::vector<InstanceBuffer> instanceData);
 
-	DirectX::BoundingBox GetBoundingBox();
-	bool Intersects(DirectX::SimpleMath::Ray ray, float& distance);
+	bool Intersects(DirectX::SimpleMath::Ray ray, float& distance, float& mindistance);
+	void SetIntersectBlock(DirectX::SimpleMath::Ray ray);
 	void SetPicked(bool ispicked) { isPicked = !isPicked; }
 
 private:
@@ -65,6 +65,7 @@ private:
 	ConstantBuffer m_constantBufferData;
 	UINT8* m_cbvDataBegin;
 
+	std::vector<InstanceBuffer> m_instanceData;
 	ComPtr<ID3D12Resource> m_StructuredBuffer;
 	UINT8* m_StructuredBufferDataBegin;
 	UINT instanceCount;
