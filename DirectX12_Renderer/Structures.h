@@ -21,7 +21,6 @@ struct ConstantBuffer
 	XMFLOAT4X4 viewproj;
 	XMFLOAT4 eye;
 	LightSource light;
-	bool ispicking;
 };
 
 struct SkyConstantBuffer

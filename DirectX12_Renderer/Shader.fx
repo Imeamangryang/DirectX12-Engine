@@ -40,7 +40,6 @@ cbuffer ConstantBuffer : register(b0)
     float4x4 viewproj;
     float4 eye;
     LightData light;
-    bool ispicking;
 }
 
 struct InstanceBuffer
@@ -62,6 +61,23 @@ float4 GetColor(int blocktype, float2 tex)
     else if (blocktype == 5) return float4(Tex_table[3].Sample(cmsampler, tex));
     else return float4(0.0f, 0.0f, 0.0f, 1.0f);
 }
+
+float3 GetSamplePixel(int blocktype, float2 tex, int i, int j, float2 texelsize)
+{
+    if (blocktype == 0)
+        return Tex_table[0].Sample(cmsampler, tex + float2(i, j) * texelsize).rgb;
+    else if (blocktype == 1)
+        return Tex_table[0].Sample(cmsampler, tex + float2(i, j) * texelsize).rgb;
+    else if (blocktype == 2)
+        return Tex_table[1].Sample(cmsampler, tex + float2(i, j) * texelsize).rgb;
+    else if (blocktype == 3)
+        return Tex_table[2].Sample(cmsampler, tex + float2(i, j) * texelsize).rgb;
+    else if (blocktype == 5)
+        return Tex_table[3].Sample(cmsampler, tex + float2(i, j) * texelsize).rgb;
+    else
+        return Tex_table[0].Sample(cmsampler, tex + float2(i, j) * texelsize).rgb;
+}
+
 
 // Vertex shader
 VS_OUTPUT VS(VS_INPUT input)
@@ -88,25 +104,77 @@ VS_OUTPUT VS(VS_INPUT input)
 // Pixel shader
 float4 PS(VS_OUTPUT input) : SV_TARGET
 {
-    if(instanceTransforms[input.instanceID].isvisible == 1)
+    float2 texelSize = float2(1.0 / 128.0, 1.0 / 128.0); // 텍스처 크기에 맞게 조정
+
+    // Sobel 커널
+    float3x3 sobelX = float3x3(
+        -1, 0, 1,
+        -2, 0, 2,
+        -1, 0, 1
+    );
+
+    float3x3 sobelY = float3x3(
+        -1, -2, -1,
+         0, 0, 0,
+         1, 2, 1
+    );
+    
+    // 주변 픽셀 샘플링
+    float3 sample[3][3];
+    for (int i = -1; i <= 1; ++i)
     {
-        return float4(1.0f, 0.0f, 0.0f, 1.0f);
+        for (int j = -1; j <= 1; ++j)
+        {
+            sample[i + 1][j + 1] = GetSamplePixel(instanceTransforms[input.instanceID].blocktype, input.tex, i, j, texelSize);
+        }
     }
+
+    // Sobel 연산 적용
+    float3 Gx = float3(0.0, 0.0, 0.0);
+    float3 Gy = float3(0.0, 0.0, 0.0);
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            Gx += sobelX[i][j] * sample[i][j];
+            Gy += sobelY[i][j] * sample[i][j];
+        }
+    }
+
+    // 그라디언트 크기 계산
+    float3 gradient = sqrt(Gx * Gx + Gy * Gy);
+
+    // 외곽선 검출 결과
+    float edge = length(gradient);
+    
+    // 임계값을 이용한 외곽선 두께 조절
+    float threshold = 0.1; // 임계값 조절
+    edge = edge > threshold ? 1.0 : 0.0;
+
+    // 원래 색상 계산
     float3 norm = input.norm;
     norm = normalize(norm);
-    
     float4 color = GetColor(instanceTransforms[input.instanceID].blocktype, input.tex);
-    
+
     // World space에서의 light pos와 dir 계산
     float3 worldlightpos = mul(light.pos, world).xyz;
     float3 lightDir = normalize(input.pos.xyz - worldlightpos);
-    
+
     float4 ambient = light.amb;
     float4 diffuse = light.dif * dot(-lightDir, norm);
     float3 V = reflect(lightDir, norm);
     float3 toEye = normalize(eye.xyz - input.pos.xyz);
     float4 specular = 0.1f * light.spec * pow(max(dot(V, toEye), 0.0f), 4.0f);
+
+    float4 finalColor = float4(saturate((ambient + diffuse + specular).rgb * color.rgb), color.a);
+
+    float4 edgeColor = float4(edge, edge, edge, 1.0f);
     
-    return float4(saturate((ambient + diffuse + specular).rgb * color.rgb), color.a);
-    //return saturate(normalmap.SampleLevel(cmsampler, input.tex, 0));
+    if (instanceTransforms[input.instanceID].isvisible == 1)
+    {
+        // 외곽선과 원래 색상을 조합
+        return edgeColor * 1.0 + finalColor * 1.0;
+    }
+    
+    return finalColor;
 }

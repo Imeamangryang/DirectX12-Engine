@@ -40,7 +40,6 @@ void Cube::Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 view
 	m_constantBufferData.viewproj = viewproj;
 	m_constantBufferData.eye = eye;
 	m_constantBufferData.light = m_light.GetDirectionalLight();
-	m_constantBufferData.ispicking = isPicked;
 	memcpy(m_cbvDataBegin, &m_constantBufferData, sizeof(ConstantBuffer));
 
 	ID3D12DescriptorHeap* heaps[] = { m_srvHeap.Get() };
@@ -405,12 +404,13 @@ void Cube::SetIntersectBlock(DirectX::SimpleMath::Ray ray)
 
 	if (closestInstance != nullptr)
 	{
-		closestInstance->isvisible = true;	
+		closestInstance->isvisible = SetPicked(closestInstance->isvisible);
 	}
 
-	m_instanceData.erase(
-		std::remove_if(m_instanceData.begin(), m_instanceData.end(), [](InstanceBuffer& instance) { return instance.isvisible == true; }),
-		m_instanceData.end());
+	// 선택된 블럭 삭제
+	//m_instanceData.erase(
+	//	std::remove_if(m_instanceData.begin(), m_instanceData.end(), [](InstanceBuffer& instance) { return instance.isvisible == true; }),
+	//	m_instanceData.end());
 
 	UINT64 instanceBufferSize = sizeof(InstanceBuffer) * m_instanceData.size();
 	memcpy(m_StructuredBufferDataBegin, m_instanceData.data(), instanceBufferSize);

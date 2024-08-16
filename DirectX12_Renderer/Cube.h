@@ -37,7 +37,7 @@ public:
 
 	bool Intersects(DirectX::SimpleMath::Ray ray, float& distance, float& mindistance);
 	void SetIntersectBlock(DirectX::SimpleMath::Ray ray);
-	void SetPicked(bool ispicked) { isPicked = !isPicked; }
+	bool SetPicked(bool ispicked) { return !ispicked; }
 
 private:
 	void CreateDescriptorHeap(Graphics* Renderer);
@@ -89,5 +89,4 @@ private:
 
 	// Colider Box
 	DirectX::BoundingBox m_boundingBox;
-	bool isPicked = false;
 };
