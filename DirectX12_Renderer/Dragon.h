@@ -5,7 +5,7 @@
 #include "Object.h"
 #include "FBXLoader.h"
 #include "DirectionalLight.h"
-
+#include "Texture.h"
 #include <fstream>
 #include <iomanip>
 
@@ -20,12 +20,6 @@ struct AnimFrameParams
 
 struct AnimationConstantBuffer
 {
-	//int boneCount;
-	//int CurrentFrame;
-	//int nextFrame;
-
-	int edgeTessellationFactor = 1;
-	int insideTessellationFactor = 1;
 	XMMATRIX BoneTransforms[200];
 };
 
@@ -37,36 +31,25 @@ public:
 
 	void Draw(ComPtr<ID3D12GraphicsCommandList> m_commandList, XMFLOAT4X4 viewproj, XMFLOAT4 eye);
 
-	void ClearUnusedUploadBuffersAfterInit();
-
 	void SetIsWireframe(bool isWireframe) { this->isWireframe = isWireframe; }
 
 
 	vector<shared_ptr<FbxBoneInfo>> m_boneInfos;
 
-	int m_edgetesFactor1 = 1;
-	int m_edgetesFactor2 = 1;
-	int m_edgetesFactor3 = 1;
-	int m_insidetesFactor = 1;
-
 private:
 	void InitPipeline(Graphics* Renderer);
-	void InitPipelineWireframe(Graphics* Renderer);
 
 	void CreateDescriptorHeap(Graphics* Renderer);
 
-	void CreateConstantBuffer(Graphics* Renderer);
-
 	void LoadFBXModel(Graphics* Renderer, string path);
-	void UpdateAnimation();
-
-	KeyFrameInfo InterpolateKeyFrames(const AnimClipInfo& clip, UINT boneIndex, float currentTime);
 
 	XMFLOAT4X4 GetMatrix(FbxAMatrix& mat);
 
+	XMMATRIX Interpolate(const KeyFrameInfo& kf1, const KeyFrameInfo& kf2, double time);
+	void ComputeBoneTransforms(const AnimClipInfo& animClip, double time, const vector<BoneInfo>& bones, vector<XMMATRIX>& boneTransforms);
+
 
 	ComPtr<ID3D12DescriptorHeap> m_srvHeap;
-	ID3D12Resource* m_uploadHeap;
 
 	UINT m_width;
 	UINT m_height;
@@ -75,19 +58,19 @@ private:
 	ComPtr<ID3D12PipelineState> m_pipelineState;
 	ComPtr<ID3D12PipelineState> m_pipelineStateWireframe;
 	ComPtr<ID3D12RootSignature> m_rootSignature;
-	ID3D12Resource* m_CBV;
+	ComPtr<ID3D12Resource> m_CBV;
 	ConstantBuffer m_constantBufferData;
 	UINT8* m_cbvDataBegin;
 	UINT m_srvDescSize;
 
-	ID3D12Resource* m_CbAnim;
-	CharacterConstantBuffer m_CbAnimData;
-	UINT8* m_CbAnimDataBegin;
+	AnimationConstantBuffer m_instanceData;
+	ComPtr<ID3D12Resource> m_StructuredBuffer;
+	UINT8* m_StructuredBufferDataBegin;
 
-	ID3D12Resource* m_vertexBuffer;
-	ID3D12Resource* m_vertexBufferUpload;
-	ID3D12Resource* m_indexBuffer;
-	ID3D12Resource* m_indexBufferUpload;
+	ComPtr<ID3D12Resource> m_vertexBuffer;
+	ComPtr<ID3D12Resource> m_vertexBufferUpload;
+	ComPtr<ID3D12Resource> m_indexBuffer;
+	ComPtr<ID3D12Resource> m_indexBufferUpload;
 	D3D12_VERTEX_BUFFER_VIEW m_vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW	m_indexBufferView;
 
@@ -99,4 +82,9 @@ private:
 
 	vector<AnimClipInfo> m_animClips;
 	vector<BoneInfo> m_bones;
+
+	std::shared_ptr<Texture> m_TColor;
+	std::shared_ptr<Texture> m_TNormal;
+
+	vector<XMMATRIX> boneTransforms;
 };

@@ -135,6 +135,9 @@
     <ClCompile Include="Skybox.cpp">
       <Filter>Source Files\World</Filter>
     </ClCompile>
+    <ClCompile Include="Dragon.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OrbitCycle.h">
@@ -224,6 +227,9 @@
     <ClInclude Include="Skybox.h">
       <Filter>Header Files\World</Filter>
     </ClInclude>
+    <ClInclude Include="Dragon.h">
+      <Filter>Header Files\Objects</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader.fx">
@@ -236,6 +242,9 @@
       <Filter>Resource Files</Filter>
     </FxCompile>
     <FxCompile Include="Skybox.fx">
+      <Filter>Resource Files</Filter>
+    </FxCompile>
+    <FxCompile Include="Dragon.fx">
       <Filter>Resource Files</Filter>
     </FxCompile>
   </ItemGroup>

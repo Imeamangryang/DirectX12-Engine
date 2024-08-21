@@ -1,8 +1,9 @@
 #define NUM_CONTROL_POINTS 3
+
 Texture2D Tex_table[300] : register(t0);
 
-SamplerState dmsampler : register(s0);
-SamplerState cmsampler : register(s1);
+SamplerState Linearsampler : register(s0);
+SamplerState Pointsampler : register(s1);
 
 struct VS_INPUT
 {
@@ -55,27 +56,27 @@ StructuredBuffer<InstanceBuffer> instanceTransforms : register(t4); // 인스턴스 
 float4 GetColor(int blocktype, float2 tex)
 {
     if (blocktype == 0) return float4(1.0f, 0.0f, 0.0f, 1.0f);
-    else if (blocktype == 1) return float4(Tex_table[0].Sample(cmsampler, tex));
-    else if (blocktype == 2) return float4(Tex_table[1].Sample(cmsampler, tex));
-    else if (blocktype == 3) return float4(Tex_table[2].Sample(cmsampler, tex));
-    else if (blocktype == 5) return float4(Tex_table[3].Sample(cmsampler, tex));
+    else if (blocktype == 1) return float4(Tex_table[0].Sample(Pointsampler, tex));
+    else if (blocktype == 2) return float4(Tex_table[1].Sample(Pointsampler, tex));
+    else if (blocktype == 3) return float4(Tex_table[2].Sample(Pointsampler, tex));
+    else if (blocktype == 5) return float4(Tex_table[3].Sample(Pointsampler, tex));
     else return float4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 float3 GetSamplePixel(int blocktype, float2 tex, int i, int j, float2 texelsize)
 {
     if (blocktype == 0)
-        return Tex_table[0].Sample(cmsampler, tex + float2(i, j) * texelsize).rgb;
+        return Tex_table[0].Sample(Pointsampler, tex + float2(i, j) * texelsize).rgb;
     else if (blocktype == 1)
-        return Tex_table[0].Sample(cmsampler, tex + float2(i, j) * texelsize).rgb;
+        return Tex_table[0].Sample(Pointsampler, tex + float2(i, j) * texelsize).rgb;
     else if (blocktype == 2)
-        return Tex_table[1].Sample(cmsampler, tex + float2(i, j) * texelsize).rgb;
+        return Tex_table[1].Sample(Pointsampler, tex + float2(i, j) * texelsize).rgb;
     else if (blocktype == 3)
-        return Tex_table[2].Sample(cmsampler, tex + float2(i, j) * texelsize).rgb;
+        return Tex_table[2].Sample(Pointsampler, tex + float2(i, j) * texelsize).rgb;
     else if (blocktype == 5)
-        return Tex_table[3].Sample(cmsampler, tex + float2(i, j) * texelsize).rgb;
+        return Tex_table[3].Sample(Pointsampler, tex + float2(i, j) * texelsize).rgb;
     else
-        return Tex_table[0].Sample(cmsampler, tex + float2(i, j) * texelsize).rgb;
+        return Tex_table[0].Sample(Pointsampler, tex + float2(i, j) * texelsize).rgb;
 }
 
 

@@ -151,6 +151,7 @@
     <ClCompile Include="Chunk.cpp" />
     <ClCompile Include="Cube.cpp" />
     <ClCompile Include="DirectionalLight.cpp" />
+    <ClCompile Include="Dragon.cpp" />
     <ClCompile Include="FBXLoader.cpp" />
     <ClCompile Include="ImGuiLoader.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
@@ -182,6 +183,7 @@
     <ClInclude Include="Cube.h" />
     <ClInclude Include="D3DX12.h" />
     <ClInclude Include="DirectionalLight.h" />
+    <ClInclude Include="Dragon.h" />
     <ClInclude Include="FBXLoader.h" />
     <ClInclude Include="ImGuiLoader.h" />
     <ClInclude Include="imgui\imconfig.h" />
@@ -208,6 +210,16 @@
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Dragon.fx">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Effect</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.0</ShaderModel>
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </EntryPointName>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Effect</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="PixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>

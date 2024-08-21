@@ -234,27 +234,42 @@ void Scene::SetImGuiWindow()
 			}
 		}
 		if (!ImGui::CollapsingHeader("Objects")) {
-			if (ImGui::TreeNode(m_cube.m_objectname.c_str())) {
-				ImGui::Text("Translation");
-				ImGui::DragFloat("Translation X", &m_cube.m_translation_x, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::DragFloat("Translation Y", &m_cube.m_translation_y, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::DragFloat("Translation Z", &m_cube.m_translation_z, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::Text("Rotation");
-				ImGui::DragFloat("Rotation X", &m_cube.m_rotation_x, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::DragFloat("Rotation Y", &m_cube.m_rotation_y, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::DragFloat("Rotation Z", &m_cube.m_rotation_z, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::Text("Scaling");
-				ImGui::DragFloat("Scale X", &m_cube.m_scale_x, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::DragFloat("Scale Y", &m_cube.m_scale_y, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
-				ImGui::DragFloat("Scale Z", &m_cube.m_scale_z, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+			//if (ImGui::TreeNode(m_dragon.m_objectname.c_str())) {
+			//	ImGui::Text("Translation");
+			//	ImGui::DragFloat("Translation X", &m_dragon.m_translation_x, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+			//	ImGui::DragFloat("Translation Y", &m_dragon.m_translation_y, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+			//	ImGui::DragFloat("Translation Z", &m_dragon.m_translation_z, 1.0f, -100000.0f, 100000.0f, "%.1f", ImGuiSliderFlags_None);
+			//	ImGui::Text("Rotation");
+			//	ImGui::DragFloat("Rotation X", &m_dragon.m_rotation_x, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+			//	ImGui::DragFloat("Rotation Y", &m_dragon.m_rotation_y, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+			//	ImGui::DragFloat("Rotation Z", &m_dragon.m_rotation_z, 1.0f, 0.0f, 360.0f, "%.1f", ImGuiSliderFlags_None);
+			//	ImGui::Text("Scaling");
+			//	ImGui::DragFloat("Scale X", &m_dragon.m_scale_x, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+			//	ImGui::DragFloat("Scale Y", &m_dragon.m_scale_y, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
+			//	ImGui::DragFloat("Scale Z", &m_dragon.m_scale_z, 0.1f, 0.0f, 100.0f, "%.1f", ImGuiSliderFlags_None);
 
-				ImGui::BulletText("Vertex Count : %d", m_cube.m_vertexcount);
-				ImGui::SameLine();
-				ImGui::BulletText("Index Count : %d", m_cube.m_indexcount);
+			//	ImGui::BulletText("Vertex Count : %d", m_dragon.m_vertexcount);
+			//	ImGui::SameLine();
+			//	ImGui::BulletText("Index Count : %d", m_dragon.m_indexcount);
 
-				ImGui::TreePop();
-			}
+			//	if (ImGui::TreeNode("Bone Tree")) {
+			//		for (UINT i = 1; i < m_dragon.m_boneInfos.size(); i++)
+			//		{
+			//			if (m_dragon.m_boneInfos[i]->parentIndex == 0)
+			//			{
+			//				DrawTree(m_dragon.m_boneInfos, i);
+			//			}
+			//		}
+			//		ImGui::TreePop();
+			//	}
+
+			//	ImGui::TreePop();
+			//}
 		}
 		ImGui::End();
+
+		//ImGui::Begin("CommandList", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+		//ImGui::Text("Average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		//ImGui::End();
 	}
 }

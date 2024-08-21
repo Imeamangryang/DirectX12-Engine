@@ -5,7 +5,7 @@
 #include "Cube.h"
 #include "ImGuiLoader.h"
 #include "Chunk.h"
-
+#include "Dragon.h"
 #include "Skybox.h"
 
 using namespace graphics;
