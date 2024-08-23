@@ -138,6 +138,9 @@
     <ClCompile Include="Dragon.cpp">
       <Filter>Source Files\Objects</Filter>
     </ClCompile>
+    <ClCompile Include="Particle.cpp">
+      <Filter>Source Files\Objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OrbitCycle.h">
@@ -228,6 +231,9 @@
       <Filter>Header Files\World</Filter>
     </ClInclude>
     <ClInclude Include="Dragon.h">
+      <Filter>Header Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle.h">
       <Filter>Header Files\Objects</Filter>
     </ClInclude>
   </ItemGroup>

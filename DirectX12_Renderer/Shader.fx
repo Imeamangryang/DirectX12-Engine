@@ -169,6 +169,10 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
 
     float4 finalColor = float4(saturate((ambient + diffuse + specular).rgb * color.rgb), color.a);
 
+     // Cel Shading Àû¿ë
+    float3 celColor = finalColor.rgb;
+    celColor = step(0.5, celColor) * 0.5 + step(0.75, celColor) * 0.25 + step(0.9, celColor) * 0.25;
+    
     float4 edgeColor = float4(edge, edge, edge, 1.0f);
     
     if (instanceTransforms[input.instanceID].isvisible == 1)
@@ -177,5 +181,5 @@ float4 PS(VS_OUTPUT input) : SV_TARGET
         return edgeColor * 1.0 + finalColor * 1.0;
     }
     
-    return finalColor;
+    return float4(celColor, finalColor.a);
 }
