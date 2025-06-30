@@ -24,6 +24,8 @@ DirectX12 기반의 실시간 그래픽스 렌더링 엔진 프로젝트입니�
 
 ✅ Mesh Instancing
 
+✅ ImGUI 기반 UI
+
 ⚙️ 개발 환경
 언어: C++
 
