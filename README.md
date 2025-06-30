@@ -7,7 +7,7 @@ DirectX12 기반의 실시간 그래픽스 렌더링 엔진 프로젝트입니�
 
 ![Directx_12_Renderer_2024-08-16_12-28-21](https://github.com/user-attachments/assets/42b9236e-8d16-43fb-a314-78e32de9225e)
 
-🛠️ 주요 기능
+## 🛠️ 주요 기능
 ✅ DirectX 12 기반 렌더링 파이프라인
 
 ✅ FBX Model Loading & Animations
@@ -26,7 +26,7 @@ DirectX12 기반의 실시간 그래픽스 렌더링 엔진 프로젝트입니�
 
 ✅ ImGUI 기반 UI
 
-⚙️ 개발 환경
+## ⚙️ 개발 환경
 언어: C++
 
 그래픽 API: DirectX12
